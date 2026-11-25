@@ -1,0 +1,3235 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="artifact-type" content="narrative">
+  <meta name="design-style" content="carbon">
+  <title>Criptografia e Segurança em MQTT — Laboratório Interativo e Catálogo de Exercícios</title>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,100..700;1,100..700&family=IBM+Plex+Mono:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;1,100;1,200;1,300;1,400;1,500;1,600;1,700&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@1.43.0/dist/umd/lucide.min.js"></script>
+  <style>
+    :root {
+      color-scheme: light;
+
+      /* Page and surfaces (Carbon) */
+      --background: #ffffff;
+      --surface-container-low: #f4f4f4;
+      --surface-container: #f4f4f4;
+      --surface-container-high: #e0e0e0;
+      --surface-code: #161616;
+      --on-surface-code: #f4f4f4;
+      --code-muted: #a8a8a8;
+      --code-accent: #78a9ff;
+      --code-positive: #42be65;
+      --code-warning: #f1c21b;
+      --code-error: #ff8389;
+
+      /* Ink */
+      --on-surface: #161616;
+      --on-surface-variant: #525252;
+
+      /* Rules */
+      --outline: #8d8d8d;
+      --outline-variant: #e0e0e0;
+
+      /* Accents */
+      --primary: #0f62fe;
+      --on-primary: #ffffff;
+      --primary-container: #d0e2ff;
+      --on-primary-container: #161616;
+      --secondary: #6f6f6f;
+      --tertiary: #198038;
+      --tertiary-container: #defbe6;
+      --error: #da1e28;
+      --error-container: #fff1f1;
+      --on-error: #ffffff;
+
+      /* Semantic */
+      --positive: #198038;
+      --warning: #b28600;
+      --warning-container: #fcf4d6;
+      --focus: #0f62fe;
+
+      /* Data series */
+      --data-1: #0f62fe;
+      --data-2: #6929c4;
+      --data-3: #005d5d;
+      --data-4: #9f1853;
+      --data-context: #8d8d8d;
+
+      /* Fonts */
+      --font-headline: 'IBM Plex Sans', sans-serif;
+      --font-body: 'IBM Plex Sans', sans-serif;
+      --font-label: 'IBM Plex Mono', monospace;
+
+      /* Shape */
+      --rounded: 0.125rem;
+      --rounded-lg: 0.25rem;
+      --rounded-full: 0.75rem;
+
+      /* Effects */
+      --shadow-1: 0 2px 6px rgb(0 0 0 / 0.1);
+      --shadow-2: 0 4px 12px rgb(0 0 0 / 0.12);
+      --rule: 1px solid var(--outline-variant);
+      --field-rule: 1px solid var(--outline);
+      --indicator: 2px solid var(--primary);
+      --state-bar-info: 3px solid var(--primary);
+      --state-bar-ok: 3px solid var(--positive);
+      --state-bar-warn: 3px solid var(--warning);
+      --state-bar-err: 3px solid var(--error);
+
+      /* Type scale (Narrative) */
+      --display-size: clamp(2.25rem, 1.4rem + 3.2vw, 3.75rem);
+      --headline-size: clamp(1.625rem, 1.2rem + 1.5vw, 2.25rem);
+      --subhead-size: clamp(1.1875rem, 1.05rem + 0.5vw, 1.375rem);
+      --body-size: clamp(1rem, 0.96rem + 0.18vw, 1.0625rem);
+      --label-size: 0.75rem;
+
+      /* Spacing scale */
+      --space-xs: 0.25rem;
+      --space-sm: 0.5rem;
+      --space-md: 1rem;
+      --space-lg: 1.5rem;
+      --space-xl: 2.5rem;
+      --space-2xl: 4rem;
+      --space-3xl: 6rem;
+
+      /* Motion */
+      --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+      --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+      --dur-micro: 120ms;
+      --dur-short: 220ms;
+      --dur-long: 420ms;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; }
+    html, body {
+      overflow-x: clip;
+      margin: 0;
+      padding: 0;
+      background: var(--background);
+      color: var(--on-surface);
+      font-family: var(--font-body);
+      font-size: var(--body-size);
+      line-height: 1.55;
+      scroll-behavior: smooth;
+    }
+    header { position: static !important; }
+
+    .page-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr);
+      gap: var(--space-2xl);
+      padding: var(--space-lg) var(--space-lg) var(--space-3xl);
+      max-width: 1200px;
+      margin: 0 auto;
+      overflow: hidden;
+    }
+    .page-grid * { min-width: 0; }
+
+    /* Focus rings */
+    :focus-visible {
+      outline: 2px solid var(--focus);
+      outline-offset: 2px;
+    }
+
+    /* Typography */
+    .display-title {
+      font-family: var(--font-headline);
+      font-weight: 300;
+      font-size: var(--display-size);
+      line-height: 1.15;
+      letter-spacing: 0;
+      margin: 0 0 var(--space-md) 0;
+      color: var(--on-surface);
+    }
+    .display-title strong { font-weight: 600; }
+
+    .section-title {
+      font-family: var(--font-headline);
+      font-weight: 300;
+      font-size: var(--headline-size);
+      line-height: 1.2;
+      margin: 0 0 var(--space-sm) 0;
+      color: var(--on-surface);
+    }
+    .section-title strong { font-weight: 600; }
+
+    .subhead {
+      font-family: var(--font-headline);
+      font-weight: 600;
+      font-size: var(--subhead-size);
+      line-height: 1.3;
+      margin: 0 0 var(--space-sm) 0;
+      color: var(--on-surface);
+    }
+
+    .label {
+      font-family: var(--font-label);
+      font-size: var(--label-size);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--on-surface-variant);
+      display: block;
+    }
+
+    .lede {
+      font-size: clamp(1.0625rem, 1rem + 0.35vw, 1.25rem);
+      color: var(--on-surface-variant);
+      max-width: 65ch;
+      margin: 0;
+    }
+
+    .prose {
+      max-width: 65ch;
+      margin: 0 0 var(--space-md) 0;
+    }
+
+    .mono-inline {
+      font-family: var(--font-label);
+      font-size: 0.875em;
+      background: var(--surface-container-high);
+      color: var(--on-surface);
+      padding: 0.1rem var(--space-xs);
+    }
+
+    /* Header & Quick Index */
+    .site-header {
+      border-bottom: var(--rule);
+      padding-bottom: var(--space-xl);
+    }
+    .header-meta-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-md);
+      padding-bottom: var(--space-md);
+      margin-bottom: var(--space-lg);
+      border-bottom: var(--rule);
+    }
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-xs);
+      height: 24px;
+      padding: 0 var(--space-sm);
+      background: var(--primary-container);
+      color: var(--on-primary-container);
+      border-radius: var(--rounded-full);
+      font-size: var(--label-size);
+      font-weight: 500;
+      white-space: nowrap;
+    }
+    .tag--neutral {
+      background: var(--surface-container-high);
+      color: var(--on-surface);
+    }
+    .tag--ok {
+      background: var(--tertiary-container);
+      color: var(--positive);
+    }
+    .tag--err {
+      background: var(--error-container);
+      color: var(--error);
+    }
+    .tag--warn {
+      background: var(--warning-container);
+      color: var(--on-surface);
+    }
+
+    /* Navigation strip */
+    .nav-strip {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--space-sm);
+      border-bottom: var(--rule);
+      padding-bottom: var(--space-md);
+      margin-top: var(--space-lg);
+    }
+    .nav-link {
+      display: inline-flex;
+      align-items: center;
+      min-height: 44px;
+      padding: var(--space-xs) var(--space-md);
+      background: var(--surface-container);
+      color: var(--on-surface);
+      text-decoration: none;
+      font-family: var(--font-label);
+      font-size: var(--label-size);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      border-bottom: 2px solid transparent;
+      transition: background-color var(--dur-micro) var(--ease-out), border-color var(--dur-micro) var(--ease-out);
+    }
+    .nav-link:hover {
+      background: var(--surface-container-high);
+      border-bottom-color: var(--primary);
+    }
+
+    /* KPI Grid */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(min(220px, 100%), 1fr));
+      gap: var(--space-md);
+      margin-top: var(--space-lg);
+    }
+    .kpi-tile {
+      background: var(--surface-container);
+      padding: var(--space-md);
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-xs);
+    }
+    .kpi-tile.is-primary {
+      border-bottom: var(--indicator);
+    }
+    .kpi-value {
+      font-family: var(--font-label);
+      font-weight: 300;
+      font-size: 2rem;
+      line-height: 1.1;
+      color: var(--on-surface);
+    }
+    .kpi-helper {
+      font-size: 0.875rem;
+      color: var(--on-surface-variant);
+    }
+
+    /* Sections */
+    .module-section {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-lg);
+    }
+    .section-head {
+      border-bottom: var(--rule);
+      padding-bottom: var(--space-md);
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-xs);
+    }
+
+    /* Flat gray layers (Carbon Treatment 1) */
+    .layer {
+      background: var(--surface-container);
+      border-radius: 0;
+      padding: var(--space-lg);
+    }
+    .layer .layer {
+      background: var(--surface-container-high);
+    }
+    .layer--compact {
+      padding: var(--space-md);
+    }
+
+    /* Grids */
+    .split-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+      gap: var(--space-lg);
+      align-items: start;
+    }
+    .split-equal {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: var(--space-lg);
+      align-items: start;
+    }
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr));
+      gap: var(--space-md);
+    }
+
+    /* Buttons (Carbon) */
+    .btn-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--space-sm);
+      align-items: center;
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-md);
+      min-height: 44px;
+      padding: var(--space-sm) var(--space-lg) var(--space-sm) var(--space-md);
+      border: 1px solid transparent;
+      border-radius: 0;
+      font-family: var(--font-body);
+      font-size: 0.9375rem;
+      font-weight: 400;
+      cursor: pointer;
+      text-align: left;
+      transition: background-color var(--dur-micro) var(--ease-out), color var(--dur-micro) var(--ease-out);
+    }
+    .btn--primary {
+      background: var(--primary);
+      color: var(--on-primary);
+    }
+    .btn--primary:hover:not(:disabled) {
+      background: color-mix(in srgb, var(--primary), var(--on-surface) 22%);
+    }
+    .btn--secondary {
+      background: transparent;
+      color: var(--primary);
+      border-color: var(--primary);
+    }
+    .btn--secondary:hover:not(:disabled) {
+      background: var(--primary-container);
+      color: var(--on-primary-container);
+    }
+    .btn--danger {
+      background: var(--error);
+      color: var(--on-error);
+    }
+    .btn--danger:hover:not(:disabled) {
+      background: color-mix(in srgb, var(--error), var(--on-surface) 22%);
+    }
+    .btn--ghost {
+      background: var(--surface-container-high);
+      color: var(--on-surface);
+      padding: var(--space-sm) var(--space-md);
+    }
+    .btn--ghost:hover:not(:disabled) {
+      background: color-mix(in srgb, var(--surface-container-high), var(--on-surface) 10%);
+    }
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    .btn.is-selected {
+      background: var(--primary);
+      color: var(--on-primary);
+      border-color: var(--primary);
+    }
+
+    /* Segmented tabs (Carbon Treatment 4) */
+    .tab-bar {
+      display: flex;
+      flex-wrap: wrap;
+      border-bottom: var(--rule);
+      gap: 0;
+    }
+    .tab-btn {
+      min-height: 44px;
+      padding: var(--space-sm) var(--space-md);
+      background: transparent;
+      border: 0;
+      border-bottom: 2px solid transparent;
+      font-family: var(--font-body);
+      font-size: 0.9375rem;
+      font-weight: 400;
+      color: var(--on-surface-variant);
+      cursor: pointer;
+      transition: background-color var(--dur-micro) var(--ease-out), color var(--dur-micro) var(--ease-out);
+    }
+    .tab-btn:hover {
+      background: var(--surface-container-high);
+      color: var(--on-surface);
+    }
+    .tab-btn.is-active {
+      color: var(--on-surface);
+      font-weight: 600;
+      border-bottom: var(--indicator);
+    }
+
+    /* Inputs & Controls */
+    .form-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--space-md);
+      align-items: end;
+    }
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-xs);
+      flex: 1 1 200px;
+    }
+    .field-label {
+      font-family: var(--font-body);
+      font-size: var(--label-size);
+      font-weight: 600;
+      color: var(--on-surface-variant);
+    }
+    .input, .select, .textarea {
+      width: 100%;
+      min-height: 44px;
+      padding: var(--space-sm) var(--space-md);
+      background: var(--background);
+      color: var(--on-surface);
+      border: 0;
+      border-bottom: var(--field-rule);
+      border-radius: var(--rounded);
+      font-family: var(--font-body);
+      font-size: 0.9375rem;
+    }
+    .layer .input, .layer .select, .layer .textarea {
+      background: var(--background);
+    }
+    .select {
+      padding-right: var(--space-xl);
+      cursor: pointer;
+    }
+    .textarea {
+      min-height: 88px;
+      resize: vertical;
+      font-family: var(--font-label);
+      font-size: 0.875rem;
+    }
+    .input:focus-visible, .select:focus-visible, .textarea:focus-visible {
+      outline: 2px solid var(--focus);
+      outline-offset: 0;
+    }
+    .range-wrap {
+      display: flex;
+      align-items: center;
+      min-height: 44px;
+      width: 100%;
+    }
+    input[type="range"] {
+      width: 100%;
+      accent-color: var(--primary);
+      cursor: pointer;
+      height: 24px;
+    }
+
+    /* Notifications (Carbon) */
+    .notice {
+      background: var(--surface-container);
+      padding: var(--space-md);
+      border-left: var(--state-bar-info);
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-xs);
+    }
+    .notice--ok { border-left: var(--state-bar-ok); }
+    .notice--warn { border-left: var(--state-bar-warn); }
+    .notice--err { border-left: var(--state-bar-err); }
+    .notice-title {
+      font-weight: 600;
+      font-size: 0.9375rem;
+      display: flex;
+      align-items: center;
+      gap: var(--space-sm);
+    }
+
+    /* Code blocks */
+    .code-panel {
+      background: var(--surface-code);
+      color: var(--on-surface-code);
+      display: flex;
+      flex-direction: column;
+    }
+    .code-header {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-sm);
+      padding: var(--space-sm) var(--space-md);
+      border-bottom: 1px solid var(--on-surface-variant);
+    }
+    .code-title {
+      font-family: var(--font-label);
+      font-size: var(--label-size);
+      color: var(--code-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+    .copy-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-xs);
+      min-height: 36px;
+      padding: var(--space-xs) var(--space-sm);
+      background: var(--on-surface-variant);
+      color: var(--on-surface-code);
+      border: 0;
+      font-family: var(--font-label);
+      font-size: var(--label-size);
+      cursor: pointer;
+    }
+    .copy-btn:hover {
+      background: var(--primary);
+    }
+    .code-pre {
+      margin: 0;
+      padding: var(--space-md);
+      overflow-x: auto;
+      font-family: var(--font-label);
+      font-size: 0.8125rem;
+      line-height: 1.55;
+      color: var(--on-surface-code);
+      tab-size: 4;
+    }
+
+    /* Tables (Carbon) */
+    .table-wrap {
+      overflow-x: auto;
+      width: 100%;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9375rem;
+    }
+    th {
+      background: var(--surface-container-high);
+      font-family: var(--font-label);
+      font-size: var(--label-size);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      text-align: left;
+      padding: var(--space-sm) var(--space-md);
+      color: var(--on-surface);
+      border-bottom: var(--rule);
+    }
+    td {
+      padding: var(--space-sm) var(--space-md);
+      border-bottom: var(--rule);
+      vertical-align: top;
+    }
+    tbody tr:nth-child(even) td {
+      background: var(--surface-container-low);
+    }
+    .num-col {
+      text-align: right;
+      font-family: var(--font-label);
+      white-space: nowrap;
+    }
+
+    /* Caesar Alphabet Strip */
+    .alpha-strip {
+      display: grid;
+      grid-template-columns: repeat(13, minmax(0, 1fr));
+      gap: 2px;
+      font-family: var(--font-label);
+      font-size: var(--label-size);
+      margin-top: var(--space-sm);
+    }
+    .alpha-cell {
+      background: var(--background);
+      padding: var(--space-xs);
+      text-align: center;
+      border-bottom: var(--rule);
+    }
+    .alpha-cell strong {
+      display: block;
+      color: var(--primary);
+    }
+
+    /* AES Visual Canvas Lab */
+    .aes-canvas-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(min(220px, 100%), 1fr));
+      gap: var(--space-md);
+    }
+    .aes-card {
+      background: var(--background);
+      border: var(--rule);
+      padding: var(--space-md);
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-sm);
+    }
+    .aes-card.is-highlighted {
+      border-bottom: var(--indicator);
+    }
+    .canvas-box {
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      max-width: 240px;
+      background: var(--surface-container);
+      border: var(--rule);
+      cursor: crosshair;
+      image-rendering: pixelated;
+    }
+
+    /* Hash Avalanche Visual */
+    .hash-output {
+      font-family: var(--font-label);
+      font-size: 0.8125rem;
+      word-break: break-all;
+      background: var(--background);
+      padding: var(--space-sm) var(--space-md);
+      border-left: 3px solid var(--primary);
+      line-height: 1.5;
+    }
+    .bit-bar-track {
+      width: 100%;
+      height: 14px;
+      background: var(--surface-container-high);
+      position: relative;
+      overflow: hidden;
+    }
+    .bit-bar-fill {
+      height: 100%;
+      background: var(--primary);
+      transition: width var(--dur-short) var(--ease-out);
+    }
+    .char-diff {
+      background: var(--primary-container);
+      color: var(--on-primary-container);
+      font-weight: 600;
+    }
+
+    /* MQTT Topology & Console */
+    .mqtt-topology {
+      background: var(--background);
+      border: var(--rule);
+      padding: var(--space-md);
+      overflow-x: auto;
+    }
+    .cia-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: var(--space-sm);
+    }
+    .cia-card {
+      background: var(--background);
+      padding: var(--space-md);
+      border-left: 3px solid var(--positive);
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-xs);
+    }
+    .cia-card.is-compromised {
+      border-left-color: var(--error);
+    }
+    .cia-card.is-mitigated {
+      border-left-color: var(--primary);
+    }
+    .mqtt-console {
+      background: var(--surface-code);
+      color: var(--on-surface-code);
+      font-family: var(--font-label);
+      font-size: 0.8125rem;
+      line-height: 1.5;
+      padding: var(--space-md);
+      min-height: 240px;
+      max-height: 320px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-xs);
+    }
+    .log-line {
+      border-bottom: 1px solid color-mix(in srgb, var(--on-surface-variant) 35%, transparent);
+      padding-bottom: var(--space-xs);
+    }
+    .log-time { color: var(--code-muted); }
+    .log-ok { color: var(--code-positive); }
+    .log-warn { color: var(--code-warning); }
+    .log-err { color: var(--code-error); }
+    .log-info { color: var(--code-accent); }
+
+    /* Exercises & Quiz */
+    .exercise-card {
+      background: var(--surface-container);
+      padding: var(--space-lg);
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-md);
+      border-left: 3px solid var(--outline-variant);
+    }
+    .exercise-card.is-done {
+      border-left-color: var(--positive);
+    }
+    .details-toggle {
+      background: var(--background);
+      border: var(--rule);
+      padding: var(--space-sm) var(--space-md);
+    }
+    .details-toggle summary {
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 0.9375rem;
+      min-height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .details-body {
+      padding-top: var(--space-md);
+      border-top: var(--rule);
+      margin-top: var(--space-sm);
+    }
+
+    .quiz-card {
+      background: var(--surface-container);
+      padding: var(--space-lg);
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-md);
+    }
+    .quiz-options {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr);
+      gap: var(--space-xs);
+    }
+    .quiz-opt {
+      width: 100%;
+      min-height: 44px;
+      padding: var(--space-sm) var(--space-md);
+      background: var(--background);
+      color: var(--on-surface);
+      border: 1px solid var(--outline-variant);
+      text-align: left;
+      font-family: var(--font-body);
+      font-size: 0.9375rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: var(--space-md);
+      transition: background-color var(--dur-micro) var(--ease-out);
+    }
+    .quiz-opt:hover:not(:disabled) {
+      background: var(--primary-container);
+    }
+    .quiz-opt.is-correct {
+      background: var(--tertiary-container);
+      border-color: var(--positive);
+      font-weight: 600;
+    }
+    .quiz-opt.is-wrong {
+      background: var(--error-container);
+      border-color: var(--error);
+    }
+    .opt-letter {
+      font-family: var(--font-label);
+      font-weight: 600;
+      color: var(--primary);
+      min-width: 24px;
+    }
+
+    /* Checklist */
+    .check-item {
+      display: flex;
+      align-items: flex-start;
+      gap: var(--space-md);
+      padding: var(--space-sm) 0;
+      border-bottom: var(--rule);
+      cursor: pointer;
+      min-height: 44px;
+    }
+    .check-item input[type="checkbox"] {
+      width: 20px;
+      height: 20px;
+      margin-top: 2px;
+      accent-color: var(--primary);
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    /* Footer */
+    .site-footer {
+      border-top: var(--rule);
+      padding-top: var(--space-lg);
+      color: var(--on-surface-variant);
+      font-size: 0.875rem;
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-xs);
+    }
+
+    /* Mobile breakpoint */
+    @media (max-width: 640px) {
+      .page-grid { padding: var(--space-md); gap: var(--space-xl); }
+      .split-grid, .split-equal, .cia-grid { grid-template-columns: minmax(0, 1fr); }
+      .alpha-strip { grid-template-columns: repeat(7, minmax(0, 1fr)); }
+      .btn { width: 100%; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<main class="page-grid">
+  <!-- HEADER / VISÃO GERAL -->
+  <header class="site-header">
+    <div class="header-meta-row">
+      <span class="label">Semana 07 · Autoestudos 3, 4 e 6 · Laboratório de Segurança e Criptografia</span>
+      <div class="btn-row">
+        <span class="tag">Python 3 · cryptography &amp; paho-mqtt</span>
+        <span class="tag tag--neutral">Tríade CIA</span>
+      </div>
+    </div>
+
+    <h1 class="display-title">Criptografia Aplicada e <strong>Segurança em MQTT</strong></h1>
+    <p class="lede">
+      Catálogo interativo de fundamentos, simulações em tempo real, código Python executável e roteiro guiado para a atividade ponderada de simulação de ataques na Tríade CIA.
+    </p>
+
+    <div class="kpi-grid">
+      <div class="kpi-tile is-primary">
+        <span class="label">Módulos Técnicos</span>
+        <span class="kpi-value">04</span>
+        <span class="kpi-helper">Simétrica, Assimétrica, Hashes e MQTT</span>
+      </div>
+      <div class="kpi-tile">
+        <span class="label">Exercícios Concluídos</span>
+        <span class="kpi-value" id="kpi-ex-done">0 / 6</span>
+        <span class="kpi-helper">Progresso salvo automaticamente</span>
+      </div>
+      <div class="kpi-tile">
+        <span class="label">Pontuação no Quiz</span>
+        <span class="kpi-value" id="kpi-quiz-score">0 / 8</span>
+        <span class="kpi-helper">Questões de fixação com gabarito</span>
+      </div>
+      <div class="kpi-tile">
+        <span class="label">Barema Autoestudo 6</span>
+        <span class="kpi-value">4 × 2,5</span>
+        <span class="kpi-helper">Ponderada: 3,0 pts (C, I, D + Passo-a-passo)</span>
+      </div>
+    </div>
+
+    <nav class="nav-strip" aria-label="Navegação por módulos">
+      <a class="nav-link" href="#simetrica">1. Simétrica &amp; AES</a>
+      <a class="nav-link" href="#assimetrica">2. Assimétrica &amp; RSA</a>
+      <a class="nav-link" href="#hashes">3. Hashes &amp; Integridade</a>
+      <a class="nav-link" href="#mqtt">4. Ataques MQTT (CIA)</a>
+      <a class="nav-link" href="#exercicios">5. Exercícios &amp; Quiz</a>
+      <a class="nav-link" href="#ponderada">6. Guia da Ponderada</a>
+    </nav>
+  </header>
+
+  <!-- MÓDULO 1: CRIPTOGRAFIA SIMÉTRICA -->
+  <section id="simetrica" class="module-section">
+    <div class="section-head">
+      <span class="label">Módulo 01 · Autoestudo 3 · Confidencialidade</span>
+      <h2 class="section-title">Criptografia Simétrica: <strong>Cifra de César e Modos do AES</strong></h2>
+      <p class="prose">
+        Na criptografia simétrica, remetente e destinatário compartilham <strong>exatamente a mesma chave secreta (K)</strong> para cifrar e decifrar mensagens. Ela é computacionalmente rápida e ideal para grandes volumes de dados (como payloads IoT e streams), mas exige cuidado extremo com o <strong>modo de operação</strong> da cifra de bloco.
+      </p>
+    </div>
+
+    <!-- Laboratório 1A: Cifra de César -->
+    <div class="layer">
+      <span class="label">Laboratório Interativo 1A · Substituição Monoalfabética</span>
+      <h3 class="subhead">Cifra de César e Quebra por Força Bruta</h3>
+      <p class="prose">
+        A Cifra de César desloca cada letra do alfabeto por um número fixo de posições <span class="mono-inline">k</span>. Embora historicamente relevante, possui apenas 25 chaves úteis — tornando-se trivialmente quebrável por força bruta ou análise de frequência.
+      </p>
+
+      <div class="split-grid">
+        <div class="layer">
+          <div class="form-row">
+            <div class="field" style="flex: 2 1 240px;">
+              <label class="field-label" for="caesar-input">Texto claro (Plaintext)</label>
+              <input class="input" id="caesar-input" type="text" value="SENSOR TEMP 24C OK" oninput="updateCaesar()">
+            </div>
+            <div class="field" style="flex: 1 1 120px;">
+              <label class="field-label" for="caesar-shift-num">Deslocamento (k)</label>
+              <input class="input" id="caesar-shift-num" type="number" min="1" max="25" value="3" oninput="syncCaesarFromNumber(this.value)">
+            </div>
+            <div class="field" style="flex: 1 1 140px;">
+              <label class="field-label" for="caesar-shift-range">Ajuste deslizante</label>
+              <div class="range-wrap">
+                <input id="caesar-shift-range" type="range" min="1" max="25" value="3" oninput="syncCaesarFromSlider(this.value)">
+              </div>
+            </div>
+          </div>
+
+          <div style="margin-top: var(--space-md);">
+            <span class="label">Texto cifrado resultante (Ciphertext)</span>
+            <div class="hash-output" id="caesar-output" style="margin-top: var(--space-xs); font-size: 1rem;">VHQVRU WHPS 24F RN</div>
+          </div>
+
+          <div style="margin-top: var(--space-md);">
+            <span class="label">Mapeamento alfabético ativo (Claro → Cifrado)</span>
+            <div class="alpha-strip" id="caesar-alpha-strip"></div>
+          </div>
+        </div>
+
+        <div class="layer">
+          <span class="label">Análise de Vulnerabilidade</span>
+          <h4 class="subhead" style="margin-top: var(--space-xs);">Ataque por Força Bruta (25 chaves)</h4>
+          <p style="font-size: 0.875rem; color: var(--on-surface-variant); margin-top: 0;">
+            Teste todas as chaves possíveis sobre o texto cifrado atual para comprovar por que espaços de chave pequenos não garantem confidencialidade.
+          </p>
+          <button type="button" class="btn btn--secondary" onclick="runCaesarBruteForce()">
+            <span>Executar força bruta</span>
+            <i data-lucide="terminal" aria-hidden="true"></i>
+          </button>
+          <div id="caesar-brute-list" class="mqtt-console" style="margin-top: var(--space-md); min-height: 150px; max-height: 200px;">
+            <span class="log-time">Clique no botão acima para enumerar todos os 25 deslocamentos possíveis.</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Laboratório 1B: AES ECB vs CBC vs CTR (Diferença Visual) -->
+    <div class="layer">
+      <span class="label">Laboratório Interativo 1B · Cifra de Bloco AES-128/256</span>
+      <h3 class="subhead">Por que AES-ECB Vaza Informação Visual e CBC/CTR Não</h3>
+      <p class="prose">
+        O algoritmo AES processa blocos fixos de <strong>128 bits (16 bytes)</strong>. No modo <strong>ECB (Electronic Codebook)</strong>, blocos de entrada idênticos geram exatamente os mesmos blocos cifrados — preservando contornos e padrões visuais inteiros da imagem ou estrutura original. Os modos <strong>CBC</strong> (encadeado com IV) e <strong>CTR</strong> (fluxo via Nonce + Contador) eliminam essa correlação por completo.
+      </p>
+
+      <div class="form-row" style="margin-bottom: var(--space-md);">
+        <div class="field">
+          <label class="field-label" for="aes-pattern-select">Padrão visual de entrada (32×32 px · 64 blocos)</label>
+          <select class="select" id="aes-pattern-select" onchange="renderAesVisuals()">
+            <option value="penguin">Silhueta Pinguim (Clássico ECB Penguin)</option>
+            <option value="grid">Logotipo / Grade Geométrica IoT</option>
+            <option value="checker">Matriz Binária Estruturada</option>
+          </select>
+        </div>
+        <div class="field">
+          <label class="field-label" for="aes-key-input">Chave Simétrica K (AES-128 simulada)</label>
+          <input class="input" id="aes-key-input" type="text" value="ChaveSecretaInteli" oninput="renderAesVisuals()">
+        </div>
+        <button type="button" class="btn btn--primary" onclick="randomizeIvNonce()">
+          <span>Gerar novo IV / Nonce</span>
+          <i data-lucide="refresh-cw" aria-hidden="true"></i>
+        </button>
+      </div>
+
+      <div class="aes-canvas-grid">
+        <div class="aes-card">
+          <span class="label">Entrada · Texto Claro</span>
+          <strong style="font-size: 0.9375rem;">Original (Sem Cifra)</strong>
+          <canvas id="canvas-plain" class="canvas-box" width="256" height="256" onclick="inspectAesBlock(event, 'plain')"></canvas>
+          <span style="font-size: 0.8125rem; color: var(--on-surface-variant);" id="stat-plain">64 blocos de 4×4 px</span>
+        </div>
+
+        <div class="aes-card" style="border-bottom: var(--state-bar-err);">
+          <span class="label" style="color: var(--error);">Inseguro · Determinístico</span>
+          <strong style="font-size: 0.9375rem;">AES-ECB (Vaza Padrões)</strong>
+          <canvas id="canvas-ecb" class="canvas-box" width="256" height="256" onclick="inspectAesBlock(event, 'ecb')"></canvas>
+          <span style="font-size: 0.8125rem; color: var(--error);" id="stat-ecb">Blocos repetidos visíveis!</span>
+        </div>
+
+        <div class="aes-card" style="border-bottom: var(--state-bar-ok);">
+          <span class="label" style="color: var(--positive);">Seguro · Encadeado (IV)</span>
+          <strong style="font-size: 0.9375rem;">AES-CBC (P_i XOR C_{i-1})</strong>
+          <canvas id="canvas-cbc" class="canvas-box" width="256" height="256" onclick="inspectAesBlock(event, 'cbc')"></canvas>
+          <span style="font-size: 0.8125rem; color: var(--positive);" id="stat-cbc">Entropia uniforme · 0 colisões</span>
+        </div>
+
+        <div class="aes-card" style="border-bottom: var(--indicator);">
+          <span class="label" style="color: var(--primary);">Seguro · Paralelo (Nonce)</span>
+          <strong style="font-size: 0.9375rem;">AES-CTR (Keystream)</strong>
+          <canvas id="canvas-ctr" class="canvas-box" width="256" height="256" onclick="inspectAesBlock(event, 'ctr')"></canvas>
+          <span style="font-size: 0.8125rem; color: var(--primary);" id="stat-ctr">Sem padding · 0 colisões</span>
+        </div>
+      </div>
+
+      <div class="notice" id="aes-inspector" style="margin-top: var(--space-md);">
+        <span class="notice-title">Inspetor de Blocos (clique em qualquer quadrado nos quadros acima)</span>
+        <span id="aes-inspector-text" style="font-family: var(--font-label); font-size: 0.8125rem;">
+          IV/Nonce atual: <span id="aes-iv-display"></span> — Clique em dois pontos da área branca ao redor da silhueta no quadro ECB e observe que ambos produzem exatamente o mesmo bloco cifrado em hexadecimal.
+        </span>
+      </div>
+
+      <!-- Comparação técnica ECB vs CBC vs CTR -->
+      <div class="table-wrap" style="margin-top: var(--space-lg);">
+        <table>
+          <thead>
+            <tr>
+              <th>Modo AES</th>
+              <th>Mecanismo</th>
+              <th>Exige IV / Nonce?</th>
+              <th>Exige Padding?</th>
+              <th>Segurança contra Padrões</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>ECB</strong></td>
+              <td>Cada bloco é cifrado isoladamente: <span class="mono-inline">C_i = E_K(P_i)</span></td>
+              <td>Não</td>
+              <td>Sim (PKCS7)</td>
+              <td><span class="tag tag--err">Inseguro (Vaza padrões)</span></td>
+            </tr>
+            <tr>
+              <td><strong>CBC</strong></td>
+              <td>XOR com bloco cifrado anterior: <span class="mono-inline">C_i = E_K(P_i ^ C_{i-1})</span></td>
+              <td>Sim (IV aleatório 16 B)</td>
+              <td>Sim (PKCS7)</td>
+              <td><span class="tag tag--ok">Seguro (Cifra semântica)</span></td>
+            </tr>
+            <tr>
+              <td><strong>CTR</strong></td>
+              <td>Cifra contador e aplica XOR: <span class="mono-inline">C_i = P_i ^ E_K(Nonce||i)</span></td>
+              <td>Sim (Nonce único 16 B)</td>
+              <td>Não (Cifra de fluxo)</td>
+              <td><span class="tag tag--ok">Seguro e Paralelizável</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Código Python: Criptografia Simétrica -->
+    <div class="split-equal">
+      <div class="code-panel">
+        <div class="code-header">
+          <span class="code-title">Python · 01_cifra_cesar.py</span>
+          <button type="button" class="copy-btn" onclick="copyCodeBlock('code-caesar', this)">
+            <i data-lucide="copy" aria-hidden="true"></i>
+            <span>Copiar</span>
+          </button>
+        </div>
+        <pre class="code-pre" id="code-caesar">def cifra_cesar(texto: str, deslocamento: int) -> str:
+    resultado = []
+    for ch in texto:
+        if 'A' <= ch <= 'Z':
+            base = ord('A')
+            resultado.append(chr((ord(ch) - base + deslocamento) % 26 + base))
+        elif 'a' <= ch <= 'z':
+            base = ord('a')
+            resultado.append(chr((ord(ch) - base + deslocamento) % 26 + base))
+        else:
+            resultado.append(ch)
+    return "".join(resultado)
+
+msg = "MQTT_SENSOR_OK"
+cifrado = cifra_cesar(msg, 3)
+print("Cifrado:", cifrado)
+print("Decifrado:", cifra_cesar(cifrado, -3))</pre>
+      </div>
+
+      <div class="code-panel">
+        <div class="code-header">
+          <span class="code-title">Python · 02_aes_ecb_cbc_ctr.py (cryptography)</span>
+          <button type="button" class="copy-btn" onclick="copyCodeBlock('code-aes', this)">
+            <i data-lucide="copy" aria-hidden="true"></i>
+            <span>Copiar</span>
+          </button>
+        </div>
+        <pre class="code-pre" id="code-aes">import os
+from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
+from cryptography.hazmat.primitives import padding
+
+chave = os.urandom(32)  # AES-256 (32 bytes)
+# Dois blocos identicos de 16 bytes para testar ECB vs CBC/CTR
+dados = b"BLOCO_SECRETO_01" * 2
+
+# 1) AES-ECB (INSEGURO: blocos repetidos ficam identicos!)
+ecb = Cipher(algorithms.AES(chave), modes.ECB()).encryptor()
+ct_ecb = ecb.update(dados) + ecb.finalize()
+print("ECB bloco 1 == bloco 2?", ct_ecb[:16] == ct_ecb[16:])  # True!
+
+# 2) AES-CBC (SEGURO: requer IV aleatorio + padding PKCS7)
+iv = os.urandom(16)
+padder = padding.PKCS7(128).padder()
+dados_pad = padder.update(dados) + padder.finalize()
+cbc = Cipher(algorithms.AES(chave), modes.CBC(iv)).encryptor()
+ct_cbc = cbc.update(dados_pad) + cbc.finalize()
+print("CBC bloco 1 == bloco 2?", ct_cbc[:16] == ct_cbc[16:])  # False!
+
+# 3) AES-CTR (SEGURO: cifra de fluxo via Nonce, sem padding)
+nonce = os.urandom(16)
+ctr = Cipher(algorithms.AES(chave), modes.CTR(nonce)).encryptor()
+ct_ctr = ctr.update(dados) + ctr.finalize()
+print("CTR tamanho exato:", len(ct_ctr), "bytes")</pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- MÓDULO 2: CRIPTOGRAFIA ASSIMÉTRICA -->
+  <section id="assimetrica" class="module-section">
+    <div class="section-head">
+      <span class="label">Módulo 02 · Autoestudo 4 · Chaves Pública/Privada &amp; Certificação</span>
+      <h2 class="section-title">Criptografia Assimétrica: <strong>RSA e Assinaturas Digitais</strong></h2>
+      <p class="prose">
+        A criptografia assimétrica resolve o problema da distribuição de chaves ao utilizar um <strong>par matematicamente vinculado</strong>: uma <strong>Chave Pública</strong> (que pode ser divulgada livremente) e uma <strong>Chave Privada</strong> (sigilo absoluto do proprietário). A direção de uso define a propriedade de segurança obtida.
+      </p>
+    </div>
+
+    <div class="split-equal">
+      <div class="notice">
+        <span class="notice-title">Fluxo 1 — Confidencialidade (Cifrar Mensagem)</span>
+        <span>Remetente cifra usando a <strong>Chave Pública do Destinatário</strong>. Somente o destinatário consegue decifrar usando sua própria <strong>Chave Privada</strong>.</span>
+      </div>
+      <div class="notice notice--ok">
+        <span class="notice-title">Fluxo 2 — Autenticidade e Integridade (Assinar Digitalmente)</span>
+        <span>Remetente assina o hash da mensagem usando sua própria <strong>Chave Privada</strong>. Qualquer pessoa verifica a assinatura com a <strong>Chave Pública do Remetente</strong>.</span>
+      </div>
+    </div>
+
+    <!-- Laboratório 2: Simulador Didático RSA -->
+    <div class="layer">
+      <span class="label">Laboratório Interativo 2 · Matemática Modular e Assinatura</span>
+      <h3 class="subhead">Simulador RSA: Geração de Chaves, Cifragem e Verificação de Assinatura</h3>
+
+      <div class="form-row" style="margin-bottom: var(--space-md);">
+        <div class="field">
+          <label class="field-label" for="rsa-primes-select">Par de números primos (p, q)</label>
+          <select class="select" id="rsa-primes-select" onchange="initRsaLab()">
+            <option value="61,53">p = 61, q = 53 (n = 3.233)</option>
+            <option value="101,113">p = 101, q = 113 (n = 11.413)</option>
+            <option value="257,263">p = 257, q = 263 (n = 67.591)</option>
+          </select>
+        </div>
+        <div class="kpi-tile layer--compact" style="flex: 1 1 180px;">
+          <span class="label">Chave Pública (e, n)</span>
+          <span id="rsa-pub-display" style="font-family: var(--font-label); font-weight: 600;">(17, 3233)</span>
+        </div>
+        <div class="kpi-tile layer--compact" style="flex: 1 1 180px;">
+          <span class="label">Chave Privada (d, n)</span>
+          <span id="rsa-priv-display" style="font-family: var(--font-label); font-weight: 600;">(2753, 3233)</span>
+        </div>
+        <div class="kpi-tile layer--compact" style="flex: 1 1 160px;">
+          <span class="label">Totiente φ(n)</span>
+          <span id="rsa-phi-display" style="font-family: var(--font-label); font-weight: 600;">3120</span>
+        </div>
+      </div>
+
+      <div class="split-equal">
+        <!-- Lado A: Cifragem RSA -->
+        <div class="layer">
+          <span class="label">Operação A · Confidencialidade</span>
+          <h4 class="subhead" style="margin-top: var(--space-xs);">Cifrar com Pública → Decifrar com Privada</h4>
+          <div class="form-row">
+            <div class="field">
+              <label class="field-label" for="rsa-msg-num">Valor inteiro claro M (0 &lt; M &lt; n)</label>
+              <input class="input" id="rsa-msg-num" type="number" min="2" max="3200" value="65" oninput="runRsaCipher()">
+            </div>
+            <button type="button" class="btn btn--primary" onclick="runRsaCipher()">
+              <span>Calcular C = M^e mod n</span>
+            </button>
+          </div>
+          <div class="hash-output" id="rsa-cipher-result" style="margin-top: var(--space-md);"></div>
+        </div>
+
+        <!-- Lado B: Assinatura Digital RSA -->
+        <div class="layer">
+          <span class="label">Operação B · Autenticidade &amp; Não-Repúdio</span>
+          <h4 class="subhead" style="margin-top: var(--space-xs);">Assinar com Privada → Verificar com Pública</h4>
+          <div class="form-row">
+            <div class="field">
+              <label class="field-label" for="rsa-sign-text">Payload da mensagem enviada</label>
+              <input class="input" id="rsa-sign-text" type="text" value='{"sensor":"porta_lab","estado":"fechada"}' oninput="signRsaMessage()">
+            </div>
+          </div>
+          <div class="btn-row" style="margin-top: var(--space-sm);">
+            <button type="button" class="btn btn--primary" onclick="signRsaMessage()">
+              <span>Assinar com Chave Privada</span>
+              <i data-lucide="pen-tool" aria-hidden="true"></i>
+            </button>
+            <button type="button" class="btn btn--danger" onclick="tamperRsaMessage()">
+              <span>Simular Adulteração (MITM)</span>
+              <i data-lucide="shield-alert" aria-hidden="true"></i>
+            </button>
+          </div>
+          <div class="notice" id="rsa-verify-box" style="margin-top: var(--space-md); background: var(--background);">
+            <span class="notice-title" id="rsa-verify-status">Assinatura Válida</span>
+            <span id="rsa-verify-detail" style="font-family: var(--font-label); font-size: 0.8125rem;"></span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Código Python: RSA + Assinatura Digital -->
+    <div class="code-panel">
+      <div class="code-header">
+        <span class="code-title">Python · 03_rsa_chaves_e_assinatura.py (cryptography)</span>
+        <button type="button" class="copy-btn" onclick="copyCodeBlock('code-rsa', this)">
+          <i data-lucide="copy" aria-hidden="true"></i>
+          <span>Copiar</span>
+        </button>
+      </div>
+      <pre class="code-pre" id="code-rsa">from cryptography.hazmat.primitives.asymmetric import rsa, padding
+from cryptography.hazmat.primitives import hashes
+
+# 1. Geracao do par de chaves RSA (2048 bits)
+chave_privada = rsa.generate_private_key(public_exponent=65537, key_size=2048)
+chave_publica = chave_privada.public_key()
+
+# 2. CONFIDENCIALIDADE: Cifrar com Chave Publica e Decifrar com Privada
+mensagem = b"Credencial MQTT: user=sensor01;pass=T17_Segura"
+cifrado = chave_publica.encrypt(
+    mensagem,
+    padding.OAEP(
+        mgf=padding.MGF1(algorithm=hashes.SHA256()),
+        algorithm=hashes.SHA256(),
+        label=None,
+    ),
+)
+decifrado = chave_privada.decrypt(
+    cifrado,
+    padding.OAEP(
+        mgf=padding.MGF1(algorithm=hashes.SHA256()),
+        algorithm=hashes.SHA256(),
+        label=None,
+    ),
+)
+print("Decifrado:", decifrado.decode())
+
+# 3. INTEGRIDADE &amp; AUTENTICIDADE: Assinar com Privada e Verificar com Publica
+assinatura = chave_privada.sign(
+    mensagem,
+    padding.PSS(mgf=padding.MGF1(hashes.SHA256()), salt_length=padding.PSS.MAX_LENGTH),
+    hashes.SHA256(),
+)
+# Se 1 unico byte da mensagem for alterado, verify() lanca InvalidSignature
+chave_publica.verify(
+    assinatura,
+    mensagem,
+    padding.PSS(mgf=padding.MGF1(hashes.SHA256()), salt_length=padding.PSS.MAX_LENGTH),
+    hashes.SHA256(),
+)
+print("Assinatura digital verificada com sucesso!")</pre>
+    </div>
+  </section>
+
+  <!-- MÓDULO 3: HASHES E INTEGRIDADE -->
+  <section id="hashes" class="module-section">
+    <div class="section-head">
+      <span class="label">Módulo 03 · Integridade &amp; Efeito Avalanche</span>
+      <h2 class="section-title">Funções Hash Criptográficas: <strong>MD5, SHA-256 e HMAC</strong></h2>
+      <p class="prose">
+        Uma função hash mapeia dados de tamanho arbitrário em uma impressão digital (<em>digest</em>) de tamanho fixo. Diferente da criptografia, o hash é <strong>unidirecional</strong> (não há decifragem). Enquanto o <strong>MD5 (128 bits)</strong> é considerado quebrado por vulnerabilidades de colisão, o <strong>SHA-256 (256 bits)</strong> é o padrão de mercado para verificação de integridade.
+      </p>
+    </div>
+
+    <!-- Laboratório 3: Comparador Hash + Efeito Avalanche -->
+    <div class="layer">
+      <span class="label">Laboratório Interativo 3 · Hash Real em Navegador</span>
+      <h3 class="subhead">Comparador MD5 vs SHA-256 e Medidor de Efeito Avalanche</h3>
+      <p class="prose">
+        Altere um único caractere entre a Entrada A e a Entrada B para observar o <strong>efeito avalanche</strong>: uma mudança mínima na entrada altera aproximadamente 50% de todos os bits da saída SHA-256.
+      </p>
+
+      <div class="split-equal">
+        <div class="layer">
+          <div class="field">
+            <label class="field-label" for="hash-input-a">Entrada A (Payload Original)</label>
+            <textarea class="textarea" id="hash-input-a" oninput="updateHashLab()">{"sensor": "temp_sala", "valor": 25.0}</textarea>
+          </div>
+          <div style="margin-top: var(--space-md);">
+            <span class="label">MD5 (128 bits · 32 hex · Obsoleto)</span>
+            <div class="hash-output" id="md5-out-a" style="margin-top: var(--space-xs); border-left-color: var(--warning);"></div>
+          </div>
+          <div style="margin-top: var(--space-md);">
+            <span class="label">SHA-256 (256 bits · 64 hex · Seguro)</span>
+            <div class="hash-output" id="sha-out-a" style="margin-top: var(--space-xs);"></div>
+          </div>
+        </div>
+
+        <div class="layer">
+          <div class="field">
+            <label class="field-label" for="hash-input-b">Entrada B (Adulterada em 1 caractere)</label>
+            <textarea class="textarea" id="hash-input-b" oninput="updateHashLab()">{"sensor": "temp_sala", "valor": 25.1}</textarea>
+          </div>
+          <div style="margin-top: var(--space-md);">
+            <span class="label">MD5 (128 bits · 32 hex · Obsoleto)</span>
+            <div class="hash-output" id="md5-out-b" style="margin-top: var(--space-xs); border-left-color: var(--warning);"></div>
+          </div>
+          <div style="margin-top: var(--space-md);">
+            <span class="label">SHA-256 (Destaque nos nibbles alterados)</span>
+            <div class="hash-output" id="sha-out-b" style="margin-top: var(--space-xs);"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="layer" style="margin-top: var(--space-md); background: var(--background); border: var(--rule);">
+        <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: var(--space-sm); margin-bottom: var(--space-xs);">
+          <span class="label">Divergência de Bits no SHA-256 (Efeito Avalanche)</span>
+          <span id="avalanche-stats" style="font-family: var(--font-label); font-weight: 600; color: var(--primary);"></span>
+        </div>
+        <div class="bit-bar-track">
+          <div class="bit-bar-fill" id="avalanche-bar" style="width: 50%;"></div>
+        </div>
+        <p style="font-size: 0.875rem; color: var(--on-surface-variant); margin: var(--space-sm) 0 0 0;">
+          <strong>Atenção em redes MQTT:</strong> enviar apenas <span class="mono-inline">payload + SHA256(payload)</span> não impede adulteração por um atacante em trânsito, pois o atacante pode alterar o payload e recalcular o SHA-256! Para garantir integridade autenticada, use <strong>HMAC-SHA256</strong> (hash com chave secreta) ou assinatura RSA.
+        </p>
+      </div>
+    </div>
+
+    <!-- Código Python: hashlib e hmac -->
+    <div class="code-panel">
+      <div class="code-header">
+        <span class="code-title">Python · 04_hashes_hashlib_e_hmac.py</span>
+        <button type="button" class="copy-btn" onclick="copyCodeBlock('code-hash', this)">
+          <i data-lucide="copy" aria-hidden="true"></i>
+          <span>Copiar</span>
+        </button>
+      </div>
+      <pre class="code-pre" id="code-hash">import hashlib
+import hmac
+
+payload = b'{"sensor": "temp_sala", "valor": 25.0}'
+
+# 1. MD5 (nao recomendado para seguranca; sujeito a colisoes)
+digest_md5 = hashlib.md5(payload).hexdigest()
+
+# 2. SHA-256 (padrao atual para verificacao de integridade)
+digest_sha256 = hashlib.sha256(payload).hexdigest()
+print("MD5    :", digest_md5)
+print("SHA-256:", digest_sha256)
+
+# 3. HMAC-SHA256: Integridade + Autenticacao com chave compartilhada
+chave_secreta = b"segredo_compartilhado_iot"
+tag_hmac = hmac.new(chave_secreta, payload, hashlib.sha256).hexdigest()
+
+# Validacao segura contra ataques de tempo (timing attack)
+tag_recebida = hmac.new(chave_secreta, payload, hashlib.sha256).hexdigest()
+integro = hmac.compare_digest(tag_hmac, tag_recebida)
+print("HMAC valido?", integro)</pre>
+    </div>
+  </section>
+
+  <!-- MÓDULO 4: SEGURANÇA E ATAQUES EM MQTT -->
+  <section id="mqtt" class="module-section">
+    <div class="section-head">
+      <span class="label">Módulo 04 · Autoestudo 6 · Tríade CIA em IoT</span>
+      <h2 class="section-title">Segurança e Ataques em <strong>MQTT pela Tríade CIA</strong></h2>
+      <p class="prose">
+        O MQTT (<em>Message Queuing Telemetry Transport</em>) opera no modelo <strong>Publish/Subscribe</strong> mediado por um Broker. Por padrão, brokers públicos de teste na porta <strong>1883 (TCP)</strong> trafegam mensagens em texto claro, sem autenticação ou ACLs — expondo os três pilares da segurança: <strong>Confidencialidade</strong>, <strong>Integridade</strong> e <strong>Disponibilidade</strong>.
+      </p>
+    </div>
+
+    <!-- Simulador Interativo de Ataques MQTT -->
+    <div class="layer">
+      <span class="label">Laboratório Interativo 4 · Simulador de Topologia e Pacotes MQTT</span>
+      <h3 class="subhead">Simulação de Ataques de Confidencialidade, Integridade e Disponibilidade</h3>
+
+      <div class="form-row" style="margin-bottom: var(--space-md);">
+        <div class="field">
+          <label class="field-label" for="mqtt-topic">Tópico alvo (Publish / Subscribe)</label>
+          <input class="input" id="mqtt-topic" type="text" value="inteli/sem07/aluno_t17/temperatura">
+        </div>
+        <div class="field">
+          <label class="field-label" for="mqtt-clientid">Client ID do sensor legítimo</label>
+          <input class="input" id="mqtt-clientid" type="text" value="sensor_t17_9f2a">
+        </div>
+        <div class="field">
+          <label class="field-label" for="mqtt-security-mode">Postura de segurança do Broker &amp; Payload</label>
+          <select class="select" id="mqtt-security-mode" onchange="changeMqttSecurityMode()">
+            <option value="vulnerable">Vulnerável: TCP :1883 · Texto Claro · Sem Auth/ACL</option>
+            <option value="protected">Protegido: MQTTS :8883 (TLS) · ACL · HMAC-SHA256</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Painel de ações de ataque -->
+      <div class="btn-row" style="margin-bottom: var(--space-md);">
+        <button type="button" class="btn btn--primary" onclick="simulateMqttEvent('normal')">
+          <span>1. Publicar Telemetria Legítima</span>
+          <i data-lucide="send" aria-hidden="true"></i>
+        </button>
+        <button type="button" class="btn btn--danger" onclick="simulateMqttEvent('confidentiality')">
+          <span>2. Ataque Confidencialidade (Eavesdropping #)</span>
+          <i data-lucide="eye" aria-hidden="true"></i>
+        </button>
+        <button type="button" class="btn btn--danger" onclick="simulateMqttEvent('integrity')">
+          <span>3. Ataque Integridade (Injeção / Adulteração)</span>
+          <i data-lucide="file-warning" aria-hidden="true"></i>
+        </button>
+        <button type="button" class="btn btn--danger" onclick="simulateMqttEvent('hijack')">
+          <span>4. Ataque Disponibilidade (Client ID Hijacking)</span>
+          <i data-lucide="user-x" aria-hidden="true"></i>
+        </button>
+        <button type="button" class="btn btn--danger" onclick="simulateMqttEvent('flood')">
+          <span>5. Ataque Disponibilidade (Message Flooding)</span>
+          <i data-lucide="zap" aria-hidden="true"></i>
+        </button>
+        <button type="button" class="btn btn--ghost" onclick="resetMqttSimulator()">
+          <span>Restaurar estado normal</span>
+        </button>
+      </div>
+
+      <!-- Estado da Tríade CIA -->
+      <div class="cia-grid" style="margin-bottom: var(--space-md);">
+        <div class="cia-card" id="cia-c-card">
+          <span class="label">Confidencialidade</span>
+          <strong id="cia-c-status">Íntegro</strong>
+          <span id="cia-c-desc" style="font-size: 0.8125rem; color: var(--on-surface-variant);">Sem interceptação registrada.</span>
+        </div>
+        <div class="cia-card" id="cia-i-card">
+          <span class="label">Integridade</span>
+          <strong id="cia-i-status">Íntegro</strong>
+          <span id="cia-i-desc" style="font-size: 0.8125rem; color: var(--on-surface-variant);">Payloads legítimos sem adulteração.</span>
+        </div>
+        <div class="cia-card" id="cia-a-card">
+          <span class="label">Disponibilidade</span>
+          <strong id="cia-a-status">Íntegro</strong>
+          <span id="cia-a-desc" style="font-size: 0.8125rem; color: var(--on-surface-variant);">Sessão do cliente ativa no Broker.</span>
+        </div>
+      </div>
+
+      <!-- Diagrama Esquemático SVG + Console -->
+      <div class="split-grid">
+        <div class="mqtt-topology">
+          <span class="label" style="margin-bottom: var(--space-sm);">Topologia de Rede em Tempo Real</span>
+          <svg id="mqtt-svg" viewBox="0 0 600 280" width="100%" style="display: block; min-height: 220px;" role="img" aria-label="Diagrama de fluxo MQTT entre Publisher, Broker, Subscriber e Atacante">
+            <!-- Conexões -->
+            <line id="line-pub-broker" x1="150" y1="70" x2="250" y2="115" stroke="var(--primary)" stroke-width="2.5" />
+            <line id="line-broker-sub" x1="350" y1="115" x2="450" y2="70" stroke="var(--positive)" stroke-width="2.5" />
+            <line id="line-atk-broker" x1="300" y1="205" x2="300" y2="155" stroke="var(--outline)" stroke-width="2" stroke-dasharray="5,4" />
+
+            <!-- Publisher -->
+            <rect x="20" y="30" width="130" height="72" fill="var(--surface-container)" stroke="var(--on-surface)" stroke-width="1.5" />
+            <text x="32" y="52" font-family="IBM Plex Mono, monospace" font-size="10" fill="var(--on-surface-variant)">PUBLISHER</text>
+            <text x="32" y="70" font-family="IBM Plex Sans, sans-serif" font-size="12" font-weight="600" fill="var(--on-surface)">Sensor IoT</text>
+            <text id="svg-pub-state" x="32" y="88" font-family="IBM Plex Mono, monospace" font-size="10" fill="var(--positive)">CONECTADO</text>
+
+            <!-- Broker -->
+            <rect x="235" y="75" width="130" height="80" fill="var(--primary-container)" stroke="var(--primary)" stroke-width="2" />
+            <text x="247" y="97" font-family="IBM Plex Mono, monospace" font-size="10" fill="var(--on-primary-container)">BROKER MQTT</text>
+            <text id="svg-broker-port" x="247" y="116" font-family="IBM Plex Sans, sans-serif" font-size="12" font-weight="600" fill="var(--on-primary-container)">TCP :1883</text>
+            <text id="svg-broker-load" x="247" y="136" font-family="IBM Plex Mono, monospace" font-size="10" fill="var(--on-primary-container)">CARGA: NORMAL</text>
+
+            <!-- Subscriber -->
+            <rect x="450" y="30" width="130" height="72" fill="var(--surface-container)" stroke="var(--on-surface)" stroke-width="1.5" />
+            <text x="462" y="52" font-family="IBM Plex Mono, monospace" font-size="10" fill="var(--on-surface-variant)">SUBSCRIBER</text>
+            <text x="462" y="70" font-family="IBM Plex Sans, sans-serif" font-size="12" font-weight="600" fill="var(--on-surface)">Painel Aluno</text>
+            <text id="svg-sub-state" x="462" y="88" font-family="IBM Plex Mono, monospace" font-size="10" fill="var(--positive)">INSCRITO</text>
+
+            <!-- Atacante -->
+            <rect x="210" y="205" width="180" height="62" fill="var(--surface-container-high)" stroke="var(--error)" stroke-width="1.5" />
+            <text x="222" y="226" font-family="IBM Plex Mono, monospace" font-size="10" fill="var(--error)">AGENTE ATACANTE</text>
+            <text id="svg-atk-action" x="222" y="246" font-family="IBM Plex Sans, sans-serif" font-size="11" font-weight="600" fill="var(--on-surface)">Em espera (Passive)</text>
+          </svg>
+        </div>
+
+        <div>
+          <span class="label" style="margin-bottom: var(--space-xs);">Monitor de Pacotes &amp; Eventos do Broker</span>
+          <div class="mqtt-console" id="mqtt-console"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pergunta-chave do Autoestudo 6 sobre Client ID duplicado -->
+    <div class="notice notice--warn">
+      <span class="notice-title">Pergunta do Autoestudo 6: O que ocorre se deixarmos o mesmo Client ID?</span>
+      <span>
+        De acordo com a especificação MQTT (v3.1.1 / v5.0), o <strong>Client Identifier (Client ID) deve ser único por cliente conectado ao Broker</strong>. Se um segundo cliente conectar usando o mesmo <span class="mono-inline">Client ID</span> de uma sessão ativa, o Broker aceita a nova conexão e <strong>desconecta imediatamente o cliente anterior</strong> (mecanismo de <em>Session Takeover</em>). Quando explorado repetidamente por um atacante em loop, causa o ataque de <strong>Desapropriação de Client ID (Hijacking)</strong>, impactando diretamente a <strong>Disponibilidade</strong>.
+      </span>
+    </div>
+
+    <!-- Código Python com paho-mqtt (Abas para os 5 scripts) -->
+    <div class="layer">
+      <span class="label">Catálogo de Scripts Python · Biblioteca paho-mqtt</span>
+      <h3 class="subhead">Implementações Reais para Teste em Laboratório</h3>
+      <div class="tab-bar" role="tablist" aria-label="Scripts Python MQTT">
+        <button type="button" class="tab-btn is-active" onclick="selectMqttCodeTab('legit', this)">Cliente Legítimo</button>
+        <button type="button" class="tab-btn" onclick="selectMqttCodeTab('eavesdrop', this)">Ataque C: Eavesdropping</button>
+        <button type="button" class="tab-btn" onclick="selectMqttCodeTab('inject', this)">Ataque I: Injeção</button>
+        <button type="button" class="tab-btn" onclick="selectMqttCodeTab('hijack', this)">Ataque D: Client ID Hijack</button>
+        <button type="button" class="tab-btn" onclick="selectMqttCodeTab('flood', this)">Ataque D: Flooding &amp; Defesa</button>
+      </div>
+
+      <div class="code-panel" style="margin-top: var(--space-md);">
+        <div class="code-header">
+          <span class="code-title" id="mqtt-code-filename">Python · mqtt_01_cliente_legitimo.py</span>
+          <button type="button" class="copy-btn" onclick="copyCodeBlock('mqtt-code-content', this)">
+            <i data-lucide="copy" aria-hidden="true"></i>
+            <span>Copiar</span>
+          </button>
+        </div>
+        <pre class="code-pre" id="mqtt-code-content"></pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- MÓDULO 5: EXERCÍCIOS PRÁTICOS E QUIZ -->
+  <section id="exercicios" class="module-section">
+    <div class="section-head">
+      <span class="label">Módulo 05 · Prática &amp; Avaliação Formativa</span>
+      <h2 class="section-title">Catálogo de <strong>Exercícios Práticos e Quiz</strong></h2>
+      <p class="prose">
+        Resolva os desafios abaixo no seu ambiente Python local (<span class="mono-inline">pip install cryptography paho-mqtt</span>) e valide seus conhecimentos teóricos no quiz. Seu progresso é salvo automaticamente.
+      </p>
+    </div>
+
+    <!-- Filtros do Catálogo -->
+    <div class="btn-row" role="group" aria-label="Filtrar exercícios por tema">
+      <button type="button" class="btn btn--ghost is-selected" onclick="filterExercises('all', this)">Todos (6)</button>
+      <button type="button" class="btn btn--ghost" onclick="filterExercises('simetrica', this)">Simétrica</button>
+      <button type="button" class="btn btn--ghost" onclick="filterExercises('assimetrica', this)">Assimétrica</button>
+      <button type="button" class="btn btn--ghost" onclick="filterExercises('hash', this)">Hashes</button>
+      <button type="button" class="btn btn--ghost" onclick="filterExercises('mqtt', this)">MQTT / CIA</button>
+    </div>
+
+    <div class="card-grid" id="exercise-catalog"></div>
+
+    <!-- Quiz Interativo -->
+    <div class="layer" style="margin-top: var(--space-lg);">
+      <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: var(--space-md); margin-bottom: var(--space-md); border-bottom: var(--rule); padding-bottom: var(--space-md);">
+        <div>
+          <span class="label">Verificação de Aprendizagem</span>
+          <h3 class="subhead" style="margin: var(--space-xs) 0 0 0;">Quiz Diagnóstico (8 Questões)</h3>
+        </div>
+        <div class="btn-row">
+          <span class="tag" id="quiz-progress-tag">0 de 8 respondidas</span>
+          <button type="button" class="btn btn--secondary" onclick="resetQuiz(this)">Reiniciar quiz</button>
+        </div>
+      </div>
+
+      <div id="quiz-container" style="display: flex; flex-direction: column; gap: var(--space-md);"></div>
+    </div>
+  </section>
+
+  <!-- MÓDULO 6: GUIA DIRECIONADO PARA ATIVIDADE PONDERADA INDIVIDUAL -->
+  <section id="ponderada" class="module-section">
+    <div class="section-head">
+      <span class="label">Módulo 06 · Autoestudo 6 · Ponderada (3 pontos)</span>
+      <h2 class="section-title">Guia Direcionado para a <strong>Atividade Ponderada Individual</strong></h2>
+      <p class="prose">
+        Roteiro estruturado para conduzir todos os experimentos do Autoestudo 6 de forma <strong>100% individual</strong> (simulando Publisher, Subscriber e Atacante em sessões separadas no mesmo computador) e atender integralmente aos quatro critérios do barema oficial.
+      </p>
+    </div>
+
+    <!-- Barema Oficial -->
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Critério do Barema Oficial</th>
+            <th>O que deve ser demonstrado</th>
+            <th class="num-col">Pontuação</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>1. Impacto na Disponibilidade</strong></td>
+            <td>Executar e evidenciar ataque de <em>Client ID Hijacking</em> (desconexão forçada por ID duplicado) ou <em>Flooding</em> de mensagens causando saturação/queda do assinante.</td>
+            <td class="num-col">2,5 pts</td>
+          </tr>
+          <tr>
+            <td><strong>2. Impacto na Integridade</strong></td>
+            <td>Publicar payload adulterado ou injetar dados falsos no tópico da vítima sem detecção por ausência de HMAC/assinatura ou ACL.</td>
+            <td class="num-col">2,5 pts</td>
+          </tr>
+          <tr>
+            <td><strong>3. Impacto na Confidencialidade</strong></td>
+            <td>Capturar mensagens em texto claro via subscrição com wildcard (<span class="mono-inline">#</span> ou <span class="mono-inline">+</span>) ou inspeção de tráfego TCP na porta 1883.</td>
+            <td class="num-col">2,5 pts</td>
+          </tr>
+          <tr>
+            <td><strong>4. Passo-a-passo completo</strong></td>
+            <td>Descrição técnica reproduzível: broker escolhido, Client IDs, tópico único, sequência exata de comandos/telas, evidências (prints/logs) e contramedidas.</td>
+            <td class="num-col">2,5 pts</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Passo-a-passo individual + Checklist + Gerador de Relatório -->
+    <div class="split-grid">
+      <div class="layer">
+        <span class="label">Checklist de Execução Individual</span>
+        <h3 class="subhead" style="margin-top: var(--space-xs);">Roteiro Passo-a-Passo</h3>
+
+        <label class="check-item">
+          <input type="checkbox" data-check="step1" onchange="toggleChecklist(this)">
+          <span><strong>1. Selecionar Broker Público e Tópico Único:</strong> Escolha um broker público da lista indicada (ex.: <span class="mono-inline">broker.hivemq.com</span> ou <span class="mono-inline">test.mosquitto.org</span>, porta 1883) e defina um tópico exclusivo como <span class="mono-inline">inteli/sem07/seunome/telemetria</span>.</span>
+        </label>
+        <label class="check-item">
+          <input type="checkbox" data-check="step2" onchange="toggleChecklist(this)">
+          <span><strong>2. Montar os 2 Clientes Individuais:</strong> Abra o HiveMQ Websocket Client (ou um script Python Subscriber) inscrito no seu tópico com Client ID aleatório, e outro terminal Python como Publisher enviando JSON a cada 2 segundos.</span>
+        </label>
+        <label class="check-item">
+          <input type="checkbox" data-check="step3" onchange="toggleChecklist(this)">
+          <span><strong>3. Evidenciar Confidencialidade:</strong> Conecte um 3º cliente atacante inscrito no prefixo <span class="mono-inline">inteli/sem07/seunome/#</span> e registre a captura integral das mensagens em texto claro.</span>
+        </label>
+        <label class="check-item">
+          <input type="checkbox" data-check="step4" onchange="toggleChecklist(this)">
+          <span><strong>4. Evidenciar Integridade:</strong> Usando o cliente atacante, publique um JSON falso (ex.: temperatura crítica 99.9°C) no tópico e comprove que o Subscriber aceita o dado como legítimo.</span>
+        </label>
+        <label class="check-item">
+          <input type="checkbox" data-check="step5" onchange="toggleChecklist(this)">
+          <span><strong>5. Evidenciar Disponibilidade (Client ID + Flooding):</strong> Conecte o atacante usando exatamente o mesmo <span class="mono-inline">Client ID</span> da vítima para provocar desconexão (<em>Session Takeover</em>) e/ou execute rajada controlada de mensagens.</span>
+        </label>
+        <label class="check-item" style="border-bottom: 0;">
+          <input type="checkbox" data-check="step6" onchange="toggleChecklist(this)">
+          <span><strong>6. Documentar Mitigações:</strong> Inclua no relatório como TLS (porta 8883), autenticação por usuário/ACL, Client IDs com UUID aleatório e HMAC-SHA256/RSA neutralizam cada ataque.</span>
+        </label>
+      </div>
+
+      <div class="layer">
+        <span class="label">Gerador de Estrutura de Relatório</span>
+        <h3 class="subhead" style="margin-top: var(--space-xs);">Exportar Rascunho Técnico (.txt)</h3>
+        <p style="font-size: 0.875rem; color: var(--on-surface-variant); margin-top: 0;">
+          Preencha os parâmetros usados no seu teste para gerar e baixar o esqueleto formatado do seu relatório técnico conforme o barema.
+        </p>
+
+        <div style="display: flex; flex-direction: column; gap: var(--space-sm);">
+          <div class="field">
+            <label class="field-label" for="rep-student">Nome completo do aluno</label>
+            <input class="input" id="rep-student" type="text" placeholder="Ex.: Maria Silva — T17" oninput="saveReportFields()">
+          </div>
+          <div class="field">
+            <label class="field-label" for="rep-broker">Broker público &amp; cliente utilizado</label>
+            <input class="input" id="rep-broker" type="text" value="broker.hivemq.com:1883 (Python paho-mqtt + HiveMQ Websocket)" oninput="saveReportFields()">
+          </div>
+          <div class="field">
+            <label class="field-label" for="rep-topic">Tópico exclusivo testado</label>
+            <input class="input" id="rep-topic" type="text" value="inteli/t17/sem07/aluno_x/sensor" oninput="saveReportFields()">
+          </div>
+          <div class="field">
+            <label class="field-label" for="rep-notes">Observações e evidências obtidas</label>
+            <textarea class="textarea" id="rep-notes" placeholder="Descreva os horários, logs de desconexão do Client ID e valores injetados..." oninput="saveReportFields()"></textarea>
+          </div>
+        </div>
+
+        <div class="btn-row" style="margin-top: var(--space-md);">
+          <button type="button" class="btn btn--primary" onclick="exportTechnicalReport()">
+            <span>Baixar rascunho do relatório</span>
+            <i data-lucide="download" aria-hidden="true"></i>
+          </button>
+          <span id="export-feedback" style="font-size: 0.875rem; color: var(--positive);"></span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER / FONTES -->
+  <footer class="site-footer">
+    <span><strong>Fontes e Referências Curriculares:</strong> Autoestudo 3 (T17 — Criptografia Simétrica), Autoestudo 4 (Criptografia Assimétrica e Certificação Digital) e Autoestudo 6 (T17 — Simulação de Ataques usando MQTT, Semana 07 — Prof. Reginaldo Arakaki e Assist. Breno Santana).</span>
+    <span>Lista de brokers públicos de referência citada no Autoestudo 6: <span class="mono-inline">mntolia.com/10-free-public-private-mqtt-brokers-for-testing-prototyping/</span> (testes locais e educacionais com tópicos não sensíveis).</span>
+  </footer>
+</main>
+
+<api-shim></api-shim>
+<script>
+  // =========================================================================
+  // ESTADO GLOBAL & PERSISTÊNCIA (notebookAppApi)
+  // =========================================================================
+  const appState = {
+    completedExercises: [],
+    quizAnswers: {},
+    checklist: {},
+    report: {
+      student: ``,
+      broker: `broker.hivemq.com:1883 (Python paho-mqtt + HiveMQ Websocket)`,
+      topic: `inteli/t17/sem07/aluno_x/sensor`,
+      notes: ``
+    }
+  };
+
+  async function saveAppState() {
+    if (!window.notebookAppApi || typeof window.notebookAppApi.setAppState !== 'function') return;
+    try {
+      await window.notebookAppApi.setAppState(appState);
+    } catch (err) {
+      // Ignora erro silenciosamente se fora do host
+    }
+  }
+
+  async function loadAppState() {
+    if (!window.notebookAppApi || typeof window.notebookAppApi.getAppState !== 'function') return;
+    try {
+      const saved = await window.notebookAppApi.getAppState();
+      if (saved && typeof saved === 'object') {
+        if (Array.isArray(saved.completedExercises)) appState.completedExercises = saved.completedExercises;
+        if (saved.quizAnswers && typeof saved.quizAnswers === 'object') appState.quizAnswers = saved.quizAnswers;
+        if (saved.checklist && typeof saved.checklist === 'object') appState.checklist = saved.checklist;
+        if (saved.report && typeof saved.report === 'object') {
+          appState.report = Object.assign(appState.report, saved.report);
+        }
+      }
+    } catch (err) {
+      // Ignora erro silenciosamente
+    }
+  }
+
+  // =========================================================================
+  // UTILITÁRIOS GERAIS
+  // =========================================================================
+  function escapeHtml(str) {
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  function copyCodeBlock(elementId, btnEl) {
+    const el = document.getElementById(elementId);
+    if (!el) return;
+    const text = el.textContent || ``;
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(() => {
+        showCopySuccess(btnEl);
+      }).catch(() => {
+        fallbackCopy(text, btnEl);
+      });
+    } else {
+      fallbackCopy(text, btnEl);
+    }
+  }
+
+  function fallbackCopy(text, btnEl) {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.select();
+    try {
+      document.execCommand('copy');
+      showCopySuccess(btnEl);
+    } catch (e) { /* noop */ }
+    document.body.removeChild(ta);
+  }
+
+  function showCopySuccess(btnEl) {
+    if (!btnEl) return;
+    const span = btnEl.querySelector('span');
+    if (span) {
+      const original = span.textContent;
+      span.textContent = 'Copiado!';
+      setTimeout(() => { span.textContent = original; }, 1600);
+    }
+  }
+
+  // =========================================================================
+  // MÓDULO 1A: CIFRA DE CÉSAR
+  // =========================================================================
+  function caesarShiftText(str, shift) {
+    const k = ((shift % 26) + 26) % 26;
+    let out = ``;
+    for (let i = 0; i < str.length; i++) {
+      const code = str.charCodeAt(i);
+      if (code >= 65 && code <= 90) {
+        out += String.fromCharCode(((code - 65 + k) % 26) + 65);
+      } else if (code >= 97 && code <= 122) {
+        out += String.fromCharCode(((code - 97 + k) % 26) + 97);
+      } else {
+        out += str[i];
+      }
+    }
+    return out;
+  }
+
+  function syncCaesarFromSlider(val) {
+    const num = document.getElementById('caesar-shift-num');
+    if (num) num.value = val;
+    updateCaesar();
+  }
+
+  function syncCaesarFromNumber(val) {
+    let n = parseInt(val, 10);
+    if (isNaN(n)) n = 1;
+    if (n < 1) n = 1;
+    if (n > 25) n = 25;
+    const slider = document.getElementById('caesar-shift-range');
+    if (slider) slider.value = n;
+    updateCaesar();
+  }
+
+  function updateCaesar() {
+    const inputEl = document.getElementById('caesar-input');
+    const numEl = document.getElementById('caesar-shift-num');
+    const outEl = document.getElementById('caesar-output');
+    const stripEl = document.getElementById('caesar-alpha-strip');
+    if (!inputEl || !numEl || !outEl || !stripEl) return;
+
+    const shift = parseInt(numEl.value, 10) || 3;
+    outEl.textContent = caesarShiftText(inputEl.value, shift);
+
+    let html = ``;
+    for (let i = 0; i < 26; i++) {
+      const plainChar = String.fromCharCode(65 + i);
+      const encChar = String.fromCharCode(((i + shift) % 26) + 65);
+      html += `<div class="alpha-cell">${plainChar}<strong>${encChar}</strong></div>`;
+    }
+    stripEl.innerHTML = html;
+  }
+
+  function runCaesarBruteForce() {
+    const outEl = document.getElementById('caesar-output');
+    const listEl = document.getElementById('caesar-brute-list');
+    const numEl = document.getElementById('caesar-shift-num');
+    if (!outEl || !listEl || !numEl) return;
+
+    const cipher = outEl.textContent || ``;
+    const realShift = parseInt(numEl.value, 10) || 3;
+    let html = ``;
+    for (let k = 1; k <= 25; k++) {
+      const candidate = caesarShiftText(cipher, -k);
+      const isMatch = k === realShift;
+      const cls = isMatch ? 'log-ok' : 'log-time';
+      const tag = isMatch ? '  <-- CHAVE REAL' : '';
+      html += `<div class="log-line ${cls}">k=${String(k).padStart(2, '0')} | ${escapeHtml(candidate)}${tag}</div>`;
+    }
+    listEl.innerHTML = html;
+  }
+
+  // =========================================================================
+  // MÓDULO 1B: AES VISUAL (ECB vs CBC vs CTR)
+  // =========================================================================
+  let currentAesIv = 0x5A3C9E17;
+  let aesBlockCache = { plain: [], ecb: [], cbc: [], ctr: [] };
+
+  function randomizeIvNonce() {
+    currentAesIv = (Math.floor(Math.random() * 0xFFFFFFFF) >>> 0);
+    renderAesVisuals();
+  }
+
+  function hash32(x, seed) {
+    let h = (x ^ seed) >>> 0;
+    h = Math.imul(h ^ (h >>> 16), 0x85ebca6b) >>> 0;
+    h = Math.imul(h ^ (h >>> 13), 0xc2b2ae35) >>> 0;
+    return (h ^ (h >>> 16)) >>> 0;
+  }
+
+  function strToKeySeed(str) {
+    let s = 0x12345678;
+    for (let i = 0; i < str.length; i++) {
+      s = Math.imul(s ^ str.charCodeAt(i), 0x01000193) >>> 0;
+    }
+    return s;
+  }
+
+  // Gera matriz 32x32 dividida em 64 blocos de 4x4 pixels (valores 0..3)
+  function buildPatternBlocks(patternType) {
+    const grid = [];
+    for (let y = 0; y < 32; y++) {
+      const row = [];
+      for (let x = 0; x < 32; x++) {
+        let val = 0; // Fundo claro
+        if (patternType === 'penguin') {
+          const dx = (x - 15.5) / 10;
+          const dy = (y - 17.5) / 12;
+          const body = (dx * dx + dy * dy) <= 1.0;
+          const hx = (x - 15.5) / 6;
+          const hy = (y - 7.5) / 5.5;
+          const head = (hx * hx + hy * hy) <= 1.0;
+          const bx = (x - 15.5) / 5.5;
+          const by = (y - 18.5) / 8;
+          const belly = (bx * bx + by * by) <= 1.0;
+          if (body || head) val = 3; // Corpo preto
+          if (belly) val = 1;        // Barriga cinza/azul
+          if (y >= 6 && y <= 8 && (x === 13 || x === 18)) val = 1; // Olhos
+          if (y >= 9 && y <= 10 && x >= 14 && x <= 17) val = 2;    // Bico
+          if (y >= 28 && y <= 30 && ((x >= 10 && x <= 13) || (x >= 18 && x <= 21))) val = 2; // Pés
+        } else if (patternType === 'grid') {
+          const border = x < 4 || x >= 28 || y < 4 || y >= 28;
+          const cross = (x >= 12 && x < 20) || (y >= 12 && y < 20);
+          const center = x >= 12 && x < 20 && y >= 12 && y < 20;
+          if (border) val = 3;
+          else if (center) val = 2;
+          else if (cross) val = 1;
+        } else {
+          // Matriz binária por blocos 4x4
+          const bx = Math.floor(x / 4);
+          const by = Math.floor(y / 4);
+          val = ((bx + by) % 2 === 0) ? 0 : 3;
+          if (bx >= 2 && bx <= 5 && by >= 2 && by <= 5) val = ((bx + by) % 2 === 0) ? 2 : 1;
+        }
+        row.push(val);
+      }
+      grid.push(row);
+    }
+
+    // Extrai os 64 blocos (8x8 de 4x4 pixels) como inteiros de 32 bits
+    const blocks = [];
+    for (let by = 0; by < 8; by++) {
+      for (let bx = 0; bx < 8; bx++) {
+        let pack = 0;
+        for (let py = 0; py < 4; py++) {
+          for (let px = 0; px < 4; px++) {
+            const v = grid[by * 4 + py][bx * 4 + px] & 0x3;
+            pack = ((pack << 2) | v) >>> 0;
+          }
+        }
+        blocks.push(pack >>> 0);
+      }
+    }
+    return blocks;
+  }
+
+  function drawBlocksOnCanvas(canvasId, blocks, isPlain) {
+    const canvas = document.getElementById(canvasId);
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    const cs = getComputedStyle(document.documentElement);
+    const cBg = cs.getPropertyValue('--background').trim() || '#ffffff';
+    const cSurf = cs.getPropertyValue('--surface-container').trim() || '#f4f4f4';
+    const cPriCont = cs.getPropertyValue('--primary-container').trim() || '#d0e2ff';
+    const cPri = cs.getPropertyValue('--primary').trim() || '#0f62fe';
+    const cSurfHi = cs.getPropertyValue('--surface-container-high').trim() || '#e0e0e0';
+    const cVar = cs.getPropertyValue('--on-surface-variant').trim() || '#525252';
+    const cInk = cs.getPropertyValue('--on-surface').trim() || '#161616';
+
+    const palettePlain = [cSurf, cPriCont, cPri, cInk];
+    const paletteCipher = [cBg, cSurfHi, cVar, cInk];
+    const pal = isPlain ? palettePlain : paletteCipher;
+
+    const pxSize = 8; // 32 * 8 = 256
+    for (let idx = 0; idx < 64; idx++) {
+      const by = Math.floor(idx / 8);
+      const bx = idx % 8;
+      let word = blocks[idx] >>> 0;
+      for (let p = 15; p >= 0; p--) {
+        const val = word & 0x3;
+        word = word >>> 2;
+        const py = Math.floor(p / 4);
+        const px = p % 4;
+        ctx.fillStyle = pal[val];
+        ctx.fillRect((bx * 4 + px) * pxSize, (by * 4 + py) * pxSize, pxSize, pxSize);
+      }
+    }
+  }
+
+  function renderAesVisuals() {
+    const sel = document.getElementById('aes-pattern-select');
+    const keyEl = document.getElementById('aes-key-input');
+    const ivDisp = document.getElementById('aes-iv-display');
+    if (!sel || !keyEl) return;
+
+    const keySeed = strToKeySeed(keyEl.value || `Inteli`);
+    const plainBlocks = buildPatternBlocks(sel.value);
+
+    const ecbBlocks = [];
+    const cbcBlocks = [];
+    const ctrBlocks = [];
+
+    let prevCbc = currentAesIv >>> 0;
+    for (let i = 0; i < 64; i++) {
+      const p = plainBlocks[i] >>> 0;
+      // ECB: determinístico, depende só de p e keySeed
+      const cEcb = hash32(p, keySeed);
+      ecbBlocks.push(cEcb);
+
+      // CBC: XOR com bloco anterior antes da cifra
+      const cCbc = hash32((p ^ prevCbc) >>> 0, keySeed);
+      cbcBlocks.push(cCbc);
+      prevCbc = cCbc;
+
+      // CTR: cifra (IV + contador) e faz XOR com plaintext
+      const keystream = hash32((currentAesIv + i) >>> 0, keySeed);
+      const cCtr = (p ^ keystream) >>> 0;
+      ctrBlocks.push(cCtr);
+    }
+
+    aesBlockCache = { plain: plainBlocks, ecb: ecbBlocks, cbc: cbcBlocks, ctr: ctrBlocks };
+
+    drawBlocksOnCanvas('canvas-plain', plainBlocks, true);
+    drawBlocksOnCanvas('canvas-ecb', ecbBlocks, false);
+    drawBlocksOnCanvas('canvas-cbc', cbcBlocks, false);
+    drawBlocksOnCanvas('canvas-ctr', ctrBlocks, false);
+
+    const uniquePlain = new Set(plainBlocks).size;
+    const uniqueEcb = new Set(ecbBlocks).size;
+    const uniqueCbc = new Set(cbcBlocks).size;
+    const uniqueCtr = new Set(ctrBlocks).size;
+
+    const spPlain = document.getElementById('stat-plain');
+    const spEcb = document.getElementById('stat-ecb');
+    const spCbc = document.getElementById('stat-cbc');
+    const spCtr = document.getElementById('stat-ctr');
+    if (spPlain) spPlain.textContent = `64 blocos (${uniquePlain} padrões distintos)`;
+    if (spEcb) spEcb.textContent = `Apenas ${uniqueEcb} blocos únicos (${64 - uniqueEcb} repetições visíveis!)`;
+    if (spCbc) spCbc.textContent = `${uniqueCbc}/64 blocos únicos · Zero padrão visível`;
+    if (spCtr) spCtr.textContent = `${uniqueCtr}/64 blocos únicos · Sem padding`;
+    if (ivDisp) ivDisp.textContent = `0x${currentAesIv.toString(16).toUpperCase().padStart(8, '0')}`;
+  }
+
+  function inspectAesBlock(evt, mode) {
+    const canvas = evt.currentTarget;
+    if (!canvas) return;
+    const rect = canvas.getBoundingClientRect();
+    const rx = (evt.clientX - rect.left) / rect.width;
+    const ry = (evt.clientY - rect.top) / rect.height;
+    const bx = Math.min(7, Math.max(0, Math.floor(rx * 8)));
+    const by = Math.min(7, Math.max(0, Math.floor(ry * 8)));
+    const idx = by * 8 + bx;
+
+    const toHex = (n) => '0x' + (n >>> 0).toString(16).toUpperCase().padStart(8, '0');
+    const pVal = aesBlockCache.plain[idx];
+    const ecbVal = aesBlockCache.ecb[idx];
+    const cbcVal = aesBlockCache.cbc[idx];
+    const ctrVal = aesBlockCache.ctr[idx];
+
+    const ecbRepeats = aesBlockCache.ecb.filter((v) => v === ecbVal).length;
+    const infoEl = document.getElementById('aes-inspector-text');
+    if (infoEl) {
+      infoEl.innerHTML =
+        `Bloco [${by}, ${bx}] (#${idx}) | Entrada P=${toHex(pVal)} | ` +
+        `ECB=${toHex(ecbVal)} (repete ${ecbRepeats}x na imagem!) | ` +
+        `CBC=${toHex(cbcVal)} | CTR=${toHex(ctrVal)}`;
+    }
+  }
+
+  // =========================================================================
+  // MÓDULO 2: SIMULADOR DIDÁTICO RSA
+  // =========================================================================
+  let rsaState = { p: 61n, q: 53n, n: 3233n, phi: 3120n, e: 17n, d: 2753n, lastSignature: 0n, lastHashMod: 0n };
+
+  function modPow(base, exp, mod) {
+    let result = 1n;
+    let b = ((base % mod) + mod) % mod;
+    let e = exp;
+    while (e > 0n) {
+      if ((e & 1n) === 1n) result = (result * b) % mod;
+      b = (b * b) % mod;
+      e >>= 1n;
+    }
+    return result;
+  }
+
+  function gcdBig(a, b) {
+    while (b !== 0n) {
+      const t = b;
+      b = a % b;
+      a = t;
+    }
+    return a;
+  }
+
+  function modInverseBig(e, phi) {
+    let t = 0n, newt = 1n;
+    let r = phi, newr = e;
+    while (newr !== 0n) {
+      const q = r / newr;
+      [t, newt] = [newt, t - q * newt];
+      [r, newr] = [newr, r - q * newr];
+    }
+    if (t < 0n) t += phi;
+    return t;
+  }
+
+  function initRsaLab() {
+    const sel = document.getElementById('rsa-primes-select');
+    if (!sel) return;
+    const parts = sel.value.split(',');
+    const p = BigInt(parts[0]);
+    const q = BigInt(parts[1]);
+    const n = p * q;
+    const phi = (p - 1n) * (q - 1n);
+
+    let e = 17n;
+    while (gcdBig(e, phi) !== 1n) e += 2n;
+    const d = modInverseBig(e, phi);
+
+    rsaState = { p, q, n, phi, e, d, lastSignature: 0n, lastHashMod: 0n };
+
+    const pubEl = document.getElementById('rsa-pub-display');
+    const privEl = document.getElementById('rsa-priv-display');
+    const phiEl = document.getElementById('rsa-phi-display');
+    if (pubEl) pubEl.textContent = `(${e}, ${n})`;
+    if (privEl) privEl.textContent = `(${d}, ${n})`;
+    if (phiEl) phiEl.textContent = `${phi}`;
+
+    runRsaCipher();
+    signRsaMessage();
+  }
+
+  function runRsaCipher() {
+    const input = document.getElementById('rsa-msg-num');
+    const resEl = document.getElementById('rsa-cipher-result');
+    if (!input || !resEl) return;
+
+    let mVal = parseInt(input.value, 10);
+    if (isNaN(mVal) || mVal < 2) mVal = 2;
+    const maxM = Number(rsaState.n) - 1;
+    if (mVal > maxM) mVal = maxM;
+
+    const m = BigInt(mVal);
+    const c = modPow(m, rsaState.e, rsaState.n);
+    const decrypted = modPow(c, rsaState.d, rsaState.n);
+
+    resEl.innerHTML =
+      `Cifrado: C = ${m}^${rsaState.e} mod ${rsaState.n} = <strong>${c}</strong><br>` +
+      `Decifrado: M = ${c}^${rsaState.d} mod ${rsaState.n} = <strong>${decrypted}</strong>`;
+  }
+
+  function simpleSha256Sync(ascii) {
+    function rightRotate(value, amount) {
+      return (value >>> amount) | (value << (32 - amount));
+    }
+    const mathPow = Math.pow;
+    const maxWord = mathPow(2, 32);
+    let result = ``;
+    const words = [];
+    const asciiBitLength = ascii.length * 8;
+
+    const hash = simpleSha256Sync.h = simpleSha256Sync.h || [];
+    const k = simpleSha256Sync.k = simpleSha256Sync.k || [];
+    let primeCounter = k.length;
+
+    const isComposite = {};
+    for (let candidate = 2; primeCounter < 64; candidate++) {
+      if (!isComposite[candidate]) {
+        for (let i = 0; i < 313; i += candidate) isComposite[i] = candidate;
+        hash[primeCounter] = (mathPow(candidate, 0.5) * maxWord) | 0;
+        k[primeCounter++] = (mathPow(candidate, 1 / 3) * maxWord) | 0;
+      }
+    }
+
+    const bytes = new TextEncoder().encode(ascii);
+    const msg = Array.from(bytes);
+    msg.push(0x80);
+    while ((msg.length % 64) !== 56) msg.push(0);
+
+    for (let i = 0; i < msg.length; i++) {
+      const j = msg[i];
+      if (j >> 8) return ``;
+      words[i >> 2] |= j << ((3 - i) % 4) * 8;
+    }
+    const bitLen = bytes.length * 8;
+    words[words.length] = ((bitLen / maxWord) | 0);
+    words[words.length] = (bitLen | 0);
+
+    const hCopy = hash.slice(0, 8);
+    for (let j = 0; j < words.length;) {
+      const w = words.slice(j, j += 16);
+      const oldHash = hCopy.slice(0);
+      for (let i = 0; i < 64; i++) {
+        const w15 = w[i - 15], w2 = w[i - 2];
+        const a = hCopy[0], e = hCopy[4];
+        const temp1 = hCopy[7]
+          + (rightRotate(e, 6) ^ rightRotate(e, 11) ^ rightRotate(e, 25))
+          + ((e & hCopy[5]) ^ ((~e) & hCopy[6]))
+          + k[i]
+          + (w[i] = (i < 16) ? w[i] : (
+            w[i - 16]
+            + (rightRotate(w15, 7) ^ rightRotate(w15, 18) ^ (w15 >>> 3))
+            + w[i - 7]
+            + (rightRotate(w2, 17) ^ rightRotate(w2, 19) ^ (w2 >>> 10))
+          ) | 0);
+        const temp2 = (rightRotate(a, 2) ^ rightRotate(a, 13) ^ rightRotate(a, 22))
+          + ((a & hCopy[1]) ^ (a & hCopy[2]) ^ (hCopy[1] & hCopy[2]));
+        hCopy.unshift((temp1 + temp2) | 0);
+        hCopy[4] = (hCopy[4] + temp1) | 0;
+        hCopy.pop();
+      }
+      for (let i = 0; i < 8; i++) hCopy[i] = (hCopy[i] + oldHash[i]) | 0;
+    }
+
+    for (let i = 0; i < 8; i++) {
+      for (let j = 3; j + 1; j--) {
+        const b = (hCopy[i] >> (j * 8)) & 255;
+        result += ((b < 16) ? '0' : '') + b.toString(16);
+      }
+    }
+    return result;
+  }
+
+  function hashModN(text, n) {
+    const hex = simpleSha256Sync(text);
+    const shortBig = BigInt('0x' + hex.slice(0, 8));
+    return (shortBig % (n - 2n)) + 2n;
+  }
+
+  function signRsaMessage() {
+    const input = document.getElementById('rsa-sign-text');
+    const box = document.getElementById('rsa-verify-box');
+    const status = document.getElementById('rsa-verify-status');
+    const detail = document.getElementById('rsa-verify-detail');
+    if (!input || !box || !status || !detail) return;
+
+    const h = hashModN(input.value, rsaState.n);
+    const sig = modPow(h, rsaState.d, rsaState.n);
+    rsaState.lastSignature = sig;
+    rsaState.lastHashMod = h;
+
+    const verified = modPow(sig, rsaState.e, rsaState.n);
+    box.className = 'notice notice--ok';
+    status.textContent = 'ASSINATURA VÁLIDA — Mensagem íntegra e autenticada';
+    detail.textContent =
+      `H(msg) mod n = ${h} | Assinatura S = H^d mod n = ${sig} | ` +
+      `Verificação S^e mod n = ${verified} == ${h}`;
+  }
+
+  function tamperRsaMessage() {
+    const input = document.getElementById('rsa-sign-text');
+    const box = document.getElementById('rsa-verify-box');
+    const status = document.getElementById('rsa-verify-status');
+    const detail = document.getElementById('rsa-verify-detail');
+    if (!input || !box || !status || !detail) return;
+
+    // Altera o payload mantendo a assinatura original
+    const original = input.value;
+    const tampered = original.includes('fechada')
+      ? original.replace('fechada', 'aberta')
+      : original + ' [ADULTERADO]';
+    input.value = tampered;
+
+    const newH = hashModN(tampered, rsaState.n);
+    const verifiedFromOldSig = modPow(rsaState.lastSignature, rsaState.e, rsaState.n);
+
+    if (newH !== verifiedFromOldSig) {
+      box.className = 'notice notice--err';
+      status.textContent = 'ASSINATURA INVÁLIDA — Adulteração detectada!';
+      detail.textContent =
+        `Novo H(msg_adulterada) = ${newH}, mas S^e mod n esperava ${verifiedFromOldSig}. Payload rejeitado!`;
+    } else {
+      signRsaMessage();
+    }
+  }
+
+  // =========================================================================
+  // MÓDULO 3: HASHES (MD5 PURO JS + SHA-256 + EFEITO AVALANCHE)
+  // =========================================================================
+  function md5(string) {
+    function rotateLeft(lValue, iShiftBits) {
+      return (lValue << iShiftBits) | (lValue >>> (32 - iShiftBits));
+    }
+    function addUnsigned(lX, lY) {
+      const lX8 = (lX & 0x80000000), lY8 = (lY & 0x80000000);
+      const lX4 = (lX & 0x40000000), lY4 = (lY & 0x40000000);
+      const lResult = (lX & 0x3FFFFFFF) + (lY & 0x3FFFFFFF);
+      if (lX4 & lY4) return (lResult ^ 0x80000000 ^ lX8 ^ lY8);
+      if (lX4 | lY4) {
+        if (lResult & 0x40000000) return (lResult ^ 0xC0000000 ^ lX8 ^ lY8);
+        else return (lResult ^ 0x40000000 ^ lX8 ^ lY8);
+      } else {
+        return (lResult ^ lX8 ^ lY8);
+      }
+    }
+    function F(x, y, z) { return (x & y) | ((~x) & z); }
+    function G(x, y, z) { return (x & z) | (y & (~z)); }
+    function H(x, y, z) { return (x ^ y ^ z); }
+    function I(x, y, z) { return (y ^ (x | (~z))); }
+    function FF(a, b, c, d, x, s, ac) {
+      a = addUnsigned(a, addUnsigned(addUnsigned(F(b, c, d), x), ac));
+      return addUnsigned(rotateLeft(a, s), b);
+    }
+    function GG(a, b, c, d, x, s, ac) {
+      a = addUnsigned(a, addUnsigned(addUnsigned(G(b, c, d), x), ac));
+      return addUnsigned(rotateLeft(a, s), b);
+    }
+    function HH(a, b, c, d, x, s, ac) {
+      a = addUnsigned(a, addUnsigned(addUnsigned(H(b, c, d), x), ac));
+      return addUnsigned(rotateLeft(a, s), b);
+    }
+    function II(a, b, c, d, x, s, ac) {
+      a = addUnsigned(a, addUnsigned(addUnsigned(I(b, c, d), x), ac));
+      return addUnsigned(rotateLeft(a, s), b);
+    }
+    function convertToWordArray(bytes) {
+      let lWordCount;
+      const lMessageLength = bytes.length;
+      const lNumberOfWordsTemp1 = lMessageLength + 8;
+      const lNumberOfWordsTemp2 = (lNumberOfWordsTemp1 - (lNumberOfWordsTemp1 % 64)) / 64;
+      const lNumberOfWords = (lNumberOfWordsTemp2 + 1) * 16;
+      const lWordArray = new Array(lNumberOfWords - 1);
+      let lBytePosition = 0;
+      let lByteCount = 0;
+      while (lByteCount < lMessageLength) {
+        lWordCount = (lByteCount - (lByteCount % 4)) / 4;
+        lBytePosition = (lByteCount % 4) * 8;
+        lWordArray[lWordCount] = (lWordArray[lWordCount] | (bytes[lByteCount] << lBytePosition));
+        lByteCount++;
+      }
+      lWordCount = (lByteCount - (lByteCount % 4)) / 4;
+      lBytePosition = (lByteCount % 4) * 8;
+      lWordArray[lWordCount] = lWordArray[lWordCount] | (0x80 << lBytePosition);
+      lWordArray[lNumberOfWords - 2] = lMessageLength << 3;
+      lWordArray[lNumberOfWords - 1] = lMessageLength >>> 29;
+      return lWordArray;
+    }
+    function wordToHex(lValue) {
+      let wordToHexValue = ``, wordToHexValueTemp = ``, lByte, lCount;
+      for (lCount = 0; lCount <= 3; lCount++) {
+        lByte = (lValue >>> (lCount * 8)) & 255;
+        wordToHexValueTemp = '0' + lByte.toString(16);
+        wordToHexValue += wordToHexValueTemp.substr(wordToHexValueTemp.length - 2, 2);
+      }
+      return wordToHexValue;
+    }
+
+    const bytes = new TextEncoder().encode(string);
+    const x = convertToWordArray(bytes);
+    let a = 0x67452301, b = 0xEFCDAB89, c = 0x98BADCFE, d = 0x10325476;
+    const S11 = 7, S12 = 12, S13 = 17, S14 = 22;
+    const S21 = 5, S22 = 9, S23 = 14, S24 = 20;
+    const S31 = 4, S32 = 11, S33 = 16, S34 = 23;
+    const S41 = 6, S42 = 10, S43 = 15, S44 = 21;
+
+    for (let k = 0; k < x.length; k += 16) {
+      const AA = a, BB = b, CC = c, DD = d;
+      a = FF(a, b, c, d, x[k + 0], S11, 0xD76AA478); d = FF(d, a, b, c, x[k + 1], S12, 0xE8C7B756);
+      c = FF(c, d, a, b, x[k + 2], S13, 0x242070DB); b = FF(b, c, d, a, x[k + 3], S14, 0xC1BDCEEE);
+      a = FF(a, b, c, d, x[k + 4], S11, 0xF57C0FAF); d = FF(d, a, b, c, x[k + 5], S12, 0x4787C62A);
+      c = FF(c, d, a, b, x[k + 6], S13, 0xA8304613); b = FF(b, c, d, a, x[k + 7], S14, 0xFD469501);
+      a = FF(a, b, c, d, x[k + 8], S11, 0x698098D8); d = FF(d, a, b, c, x[k + 9], S12, 0x8B44F7AF);
+      c = FF(c, d, a, b, x[k + 10], S13, 0xFFFF5BB1); b = FF(b, c, d, a, x[k + 11], S14, 0x895CD7BE);
+      a = FF(a, b, c, d, x[k + 12], S11, 0x6B901122); d = FF(d, a, b, c, x[k + 13], S12, 0xFD987193);
+      c = FF(c, d, a, b, x[k + 14], S13, 0xA679438E); b = FF(b, c, d, a, x[k + 15], S14, 0x49B40821);
+
+      a = GG(a, b, c, d, x[k + 1], S21, 0xF61E2562); d = GG(d, a, b, c, x[k + 6], S22, 0xC040B340);
+      c = GG(c, d, a, b, x[k + 11], S23, 0x265E5A51); b = GG(b, c, d, a, x[k + 0], S24, 0xE9B6C7AA);
+      a = GG(a, b, c, d, x[k + 5], S21, 0xD62F105D); d = GG(d, a, b, c, x[k + 10], S22, 0x2441453);
+      c = GG(c, d, a, b, x[k + 15], S23, 0xD8A1E681); b = GG(b, c, d, a, x[k + 4], S24, 0xE7D3FBC8);
+      a = GG(a, b, c, d, x[k + 9], S21, 0x21E1CDE6); d = GG(d, a, b, c, x[k + 14], S22, 0xC33707D6);
+      c = GG(c, d, a, b, x[k + 3], S23, 0xF4D50D87); b = GG(b, c, d, a, x[k + 8], S24, 0x455A14ED);
+      a = GG(a, b, c, d, x[k + 13], S21, 0xA9E3E905); d = GG(d, a, b, c, x[k + 2], S22, 0xFCEFA3F8);
+      c = GG(c, d, a, b, x[k + 7], S23, 0x676F02D9); b = GG(b, c, d, a, x[k + 12], S24, 0x8D2A4C8A);
+
+      a = HH(a, b, c, d, x[k + 5], S31, 0xFFFA3942); d = HH(d, a, b, c, x[k + 8], S32, 0x8771F681);
+      c = HH(c, d, a, b, x[k + 11], S33, 0x6D9D6122); b = HH(b, c, d, a, x[k + 14], S34, 0xFDE5380C);
+      a = HH(a, b, c, d, x[k + 1], S31, 0xA4BEEA44); d = HH(d, a, b, c, x[k + 4], S32, 0x4BDECFA9);
+      c = HH(c, d, a, b, x[k + 7], S33, 0xF6BB4B60); b = HH(b, c, d, a, x[k + 10], S34, 0xBEBFBC70);
+      a = HH(a, b, c, d, x[k + 13], S31, 0x289B7EC6); d = HH(d, a, b, c, x[k + 0], S32, 0xEAA127FA);
+      c = HH(c, d, a, b, x[k + 3], S33, 0xD4EF3085); b = HH(b, c, d, a, x[k + 6], S34, 0x4881D05);
+      a = HH(a, b, c, d, x[k + 9], S31, 0xD9D4D039); d = HH(d, a, b, c, x[k + 12], S32, 0xE6DB99E5);
+      c = HH(c, d, a, b, x[k + 15], S33, 0x1FA27CF8); b = HH(b, c, d, a, x[k + 2], S34, 0xC4AC5665);
+
+      a = II(a, b, c, d, x[k + 0], S41, 0xF4292244); d = II(d, a, b, c, x[k + 7], S42, 0x432AFF97);
+      c = II(c, d, a, b, x[k + 14], S43, 0xAB9423A7); b = II(b, c, d, a, x[k + 5], S44, 0xFC93A039);
+      a = II(a, b, c, d, x[k + 12], S41, 0x655B59C3); d = II(d, a, b, c, x[k + 3], S42, 0x8F0CCC92);
+      c = II(c, d, a, b, x[k + 10], S43, 0xFFEFF47D); b = II(b, c, d, a, x[k + 1], S44, 0x85845DD1);
+      a = II(a, b, c, d, x[k + 8], S41, 0x6FA87E4F); d = II(d, a, b, c, x[k + 15], S42, 0xFE2CE6E0);
+      c = II(c, d, a, b, x[k + 6], S43, 0xA3014314); b = II(b, c, d, a, x[k + 13], S44, 0x4E0811A1);
+      a = II(a, b, c, d, x[k + 4], S41, 0xF7537E82); d = II(d, a, b, c, x[k + 11], S42, 0xBD3AF235);
+      c = II(c, d, a, b, x[k + 2], S43, 0x2AD7D2BB); b = II(b, c, d, a, x[k + 9], S44, 0xEB86D391);
+
+      a = addUnsigned(a, AA); b = addUnsigned(b, BB);
+      c = addUnsigned(c, CC); d = addUnsigned(d, DD);
+    }
+    return (wordToHex(a) + wordToHex(b) + wordToHex(c) + wordToHex(d)).toLowerCase();
+  }
+
+  function countHexBitDiff(hexA, hexB) {
+    let diffBits = 0;
+    for (let i = 0; i < hexA.length && i < hexB.length; i++) {
+      let x = parseInt(hexA[i], 16) ^ parseInt(hexB[i], 16);
+      while (x > 0) {
+        diffBits += (x & 1);
+        x >>= 1;
+      }
+    }
+    return diffBits;
+  }
+
+  function updateHashLab() {
+    const inA = document.getElementById('hash-input-a');
+    const inB = document.getElementById('hash-input-b');
+    const md5A = document.getElementById('md5-out-a');
+    const md5B = document.getElementById('md5-out-b');
+    const shaA = document.getElementById('sha-out-a');
+    const shaB = document.getElementById('sha-out-b');
+    const stats = document.getElementById('avalanche-stats');
+    const bar = document.getElementById('avalanche-bar');
+    if (!inA || !inB || !md5A || !md5B || !shaA || !shaB || !stats || !bar) return;
+
+    const valA = inA.value;
+    const valB = inB.value;
+
+    md5A.textContent = md5(valA);
+    md5B.textContent = md5(valB);
+
+    const hA = simpleSha256Sync(valA);
+    const hB = simpleSha256Sync(valB);
+
+    shaA.textContent = hA;
+
+    let highlighted = ``;
+    for (let i = 0; i < hB.length; i++) {
+      if (hB[i] !== hA[i]) {
+        highlighted += `<span class="char-diff">${hB[i]}</span>`;
+      } else {
+        highlighted += hB[i];
+      }
+    }
+    shaB.innerHTML = highlighted;
+
+    const bitDiff = countHexBitDiff(hA, hB);
+    const pct = ((bitDiff / 256) * 100).toFixed(1);
+    stats.textContent = `${bitDiff} / 256 bits alterados (${pct}%)`;
+    bar.style.width = `${pct}%`;
+  }
+
+  // =========================================================================
+  // MÓDULO 4: SIMULADOR MQTT & SCRIPTS PYTHON
+  // =========================================================================
+  const mqttCodeSnippets = {
+    legit: {
+      filename: `Python · mqtt_01_cliente_legitimo.py`,
+      code: `import time, json, uuid
+import paho.mqtt.client as mqtt
+
+BROKER = "broker.hivemq.com"
+PORTA = 1883
+TOPICO = "inteli/t17/sem07/aluno_x/temperatura"
+CLIENT_ID = f"sensor_legitimo_{uuid.uuid4().hex[:6]}"
+
+def ao_conectar(client, userdata, flags, reason_code, properties=None):
+    print(f"[OK] Conectado ao broker ({reason_code}) | Client ID: {CLIENT_ID}")
+    client.subscribe(TOPICO, qos=1)
+
+def ao_receber(client, userdata, msg):
+    print(f"[SUB] Topico={msg.topic} | Payload={msg.payload.decode()}")
+
+cliente = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2, client_id=CLIENT_ID)
+cliente.on_connect = ao_conectar
+cliente.on_message = ao_receber
+cliente.connect(BROKER, PORTA, keepalive=60)
+cliente.loop_start()
+
+for i in range(5):
+    dado = json.dumps({"sensor": "sala_01", "temp_c": 24.5 + i * 0.1})
+    cliente.publish(TOPICO, dado, qos=1)
+    time.sleep(2)
+
+cliente.loop_stop()
+cliente.disconnect()`
+    },
+    eavesdrop: {
+      filename: `Python · mqtt_02_ataque_confidencialidade.py`,
+      code: `import paho.mqtt.client as mqtt
+
+# ATAQUE A CONFIDENCIALIDADE (Eavesdropping / Espionagem via Wildcard)
+# Em brokers sem ACL e sem TLS (porta 1883), qualquer cliente pode assinar "#" ou prefixos
+BROKER = "broker.hivemq.com"
+PORTA = 1883
+TOPICO_ESPIONAGEM = "inteli/t17/sem07/#"  # Captura todos os subtopicos!
+
+def ao_conectar(client, userdata, flags, reason_code, properties=None):
+    print(f"[ATACANTE] Conectado. Assinando wildcard: {TOPICO_ESPIONAGEM}")
+    client.subscribe(TOPICO_ESPIONAGEM)
+
+def ao_interceptar(client, userdata, msg):
+    print(f"[ESPIONAGEM] Topico={msg.topic} -> Dados em texto claro: {msg.payload.decode(errors='replace')}")
+
+atacante = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2, client_id="sniffer_t17_demo")
+atacante.on_connect = ao_conectar
+atacante.on_message = ao_interceptar
+atacante.connect(BROKER, PORTA, 60)
+atacante.loop_forever()`
+    },
+    inject: {
+      filename: `Python · mqtt_03_ataque_integridade.py`,
+      code: `import json
+import paho.mqtt.client as mqtt
+
+# ATAQUE A INTEGRIDADE (Injecao / Adulteracao de Payload)
+# Sem autenticacao ou assinatura HMAC/RSA no payload, o Subscriber aceita dados falsos
+BROKER = "broker.hivemq.com"
+PORTA = 1883
+TOPICO_ALVO = "inteli/t17/sem07/aluno_x/temperatura"
+
+atacante = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2, client_id="injetor_t17_demo")
+atacante.connect(BROKER, PORTA, 60)
+
+payload_falso = json.dumps({
+    "sensor": "sala_01",
+    "temp_c": 99.9,
+    "status": "INCENDIO_CRITICO_FALSO"
+})
+
+info = atacante.publish(TOPICO_ALVO, payload_falso, qos=1)
+info.wait_for_publish()
+print("[ATACANTE] Payload adulterado publicado com sucesso no topico da vitima!")
+atacante.disconnect()`
+    },
+    hijack: {
+      filename: `Python · mqtt_04_ataque_disponibilidade_clientid.py`,
+      code: `import time
+import paho.mqtt.client as mqtt
+
+# ATAQUE A DISPONIBILIDADE (Desapropriacao de Client ID / Session Hijacking)
+# O protocolo MQTT derruba imediatamente o cliente original se outro conectar com o mesmo ID!
+BROKER = "broker.hivemq.com"
+PORTA = 1883
+CLIENT_ID_VITIMA = "sensor_aluno_42"  # Mesmo ID usado pelo dispositivo legitimo
+
+for tentativa in range(1, 6):
+    atacante = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2, client_id=CLIENT_ID_VITIMA)
+    atacante.connect(BROKER, PORTA, 60)
+    print(f"[DOS #{tentativa}] Sessao '{CLIENT_ID_VITIMA}' sequestrada; vitima desconectada!")
+    time.sleep(1.5)
+    atacante.disconnect()`
+    },
+    flood: {
+      filename: `Python · mqtt_05_ataque_flood_e_mitigacao.py`,
+      code: `import time, ssl, hmac, hashlib
+import paho.mqtt.client as mqtt
+
+# PARTE A: ATAQUE A DISPONIBILIDADE (Message Flooding - exemplo controlado)
+def simular_flood_controlado(broker, topico, qtd=50):
+    c = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2, client_id="flood_t17_demo")
+    c.connect(broker, 1883, 60)
+    carga = "X" * 2048  # 2 KB por mensagem
+    for i in range(qtd):
+        c.publish(topico, f"{i}:{carga}", qos=0)
+    c.disconnect()
+
+# PARTE B: CONTRAMEDIDA (MQTTS TLS :8883 + Autenticacao + HMAC-SHA256)
+def conectar_seguro_tls(broker, usuario, senha, topico, mensagem, chave_hmac):
+    c = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2, client_id="sensor_seguro_uuid")
+    c.username_pw_set(usuario, senha)
+    c.tls_set(cert_reqs=ssl.CERT_REQUIRED, tls_version=ssl.PROTOCOL_TLS_CLIENT)
+    c.connect(broker, 8883, 60)
+    assinatura = hmac.new(chave_hmac, mensagem.encode(), hashlib.sha256).hexdigest()
+    c.publish(topico, f"{mensagem}|hmac={assinatura}", qos=1)
+    c.disconnect()`
+    }
+  };
+
+  function selectMqttCodeTab(key, btnEl) {
+    const parent = btnEl ? btnEl.parentElement : null;
+    if (parent) {
+      parent.querySelectorAll('.tab-btn').forEach((b) => b.classList.remove('is-active'));
+      btnEl.classList.add('is-active');
+    }
+    const item = mqttCodeSnippets[key];
+    const fnEl = document.getElementById('mqtt-code-filename');
+    const preEl = document.getElementById('mqtt-code-content');
+    if (item && fnEl && preEl) {
+      fnEl.textContent = item.filename;
+      preEl.textContent = item.code;
+    }
+  }
+
+  function appendMqttLog(typeClass, msg) {
+    const consoleEl = document.getElementById('mqtt-console');
+    if (!consoleEl) return;
+    const now = new Date();
+    const ts = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
+    const line = document.createElement('div');
+    line.className = 'log-line';
+    line.innerHTML = `<span class="log-time">[${ts}]</span> <span class="${typeClass}">${escapeHtml(msg)}</span>`;
+    consoleEl.appendChild(line);
+    consoleEl.scrollTop = consoleEl.scrollHeight;
+  }
+
+  function setCiaCardState(pillar, state, labelText, descText) {
+    const card = document.getElementById(`cia-${pillar}-card`);
+    const st = document.getElementById(`cia-${pillar}-status`);
+    const desc = document.getElementById(`cia-${pillar}-desc`);
+    if (!card || !st || !desc) return;
+    card.classList.remove('is-compromised', 'is-mitigated');
+    if (state === 'compromised') card.classList.add('is-compromised');
+    if (state === 'mitigated') card.classList.add('is-mitigated');
+    st.textContent = labelText;
+    desc.textContent = descText;
+  }
+
+  function changeMqttSecurityMode() {
+    const modeEl = document.getElementById('mqtt-security-mode');
+    const portSvg = document.getElementById('svg-broker-port');
+    if (!modeEl || !portSvg) return;
+    const isProtected = modeEl.value === 'protected';
+    portSvg.textContent = isProtected ? 'MQTTS :8883 (TLS)' : 'TCP :1883';
+    resetMqttSimulator();
+  }
+
+  function resetMqttSimulator() {
+    const pubSt = document.getElementById('svg-pub-state');
+    const subSt = document.getElementById('svg-sub-state');
+    const loadSt = document.getElementById('svg-broker-load');
+    const atkSt = document.getElementById('svg-atk-action');
+    const consoleEl = document.getElementById('mqtt-console');
+    const modeEl = document.getElementById('mqtt-security-mode');
+    const isProtected = modeEl && modeEl.value === 'protected';
+
+    if (pubSt) { pubSt.textContent = 'CONECTADO'; pubSt.setAttribute('fill', 'var(--positive)'); }
+    if (subSt) { subSt.textContent = 'INSCRITO'; subSt.setAttribute('fill', 'var(--positive)'); }
+    if (loadSt) { loadSt.textContent = 'CARGA: NORMAL'; loadSt.setAttribute('fill', 'var(--on-primary-container)'); }
+    if (atkSt) { atkSt.textContent = 'Em espera (Passive)'; }
+
+    setCiaCardState('c', 'ok', isProtected ? 'Protegido (TLS)' : 'Íntegro', isProtected ? 'Canal cifrado na porta 8883 + ACL ativa.' : 'Sem interceptação registrada.');
+    setCiaCardState('i', 'ok', isProtected ? 'Protegido (HMAC)' : 'Íntegro', isProtected ? 'Assinatura HMAC-SHA256 verificada.' : 'Payloads legítimos sem adulteração.');
+    setCiaCardState('a', 'ok', 'Íntegro', 'Sessão do cliente ativa no Broker.');
+
+    if (consoleEl) {
+      consoleEl.innerHTML = ``;
+      appendMqttLog('log-info', isProtected
+        ? 'BROKER MQTTS:8883 inicializado com TLS 1.3, ACL por usuário e verificação HMAC.'
+        : 'BROKER TCP:1883 inicializado em modo público (texto claro, sem ACL).');
+    }
+  }
+
+  function simulateMqttEvent(eventType) {
+    const topicEl = document.getElementById('mqtt-topic');
+    const clientEl = document.getElementById('mqtt-clientid');
+    const modeEl = document.getElementById('mqtt-security-mode');
+    const pubSt = document.getElementById('svg-pub-state');
+    const loadSt = document.getElementById('svg-broker-load');
+    const atkSt = document.getElementById('svg-atk-action');
+
+    const topic = topicEl ? topicEl.value : 'inteli/sem07/sensor';
+    const clientId = clientEl ? clientEl.value : 'sensor_t17';
+    const isProtected = modeEl && modeEl.value === 'protected';
+
+    if (eventType === 'normal') {
+      if (pubSt) { pubSt.textContent = 'CONECTADO'; pubSt.setAttribute('fill', 'var(--positive)'); }
+      if (atkSt) atkSt.textContent = 'Em espera';
+      const payload = isProtected
+        ? '{"temp":24.6} | hmac=8f3c...a91b [CIFRADO TLS]'
+        : '{"temp":24.6, "status":"OK"}';
+      appendMqttLog('log-ok', `PUBLISH (${clientId}) -> ${topic} | ${payload}`);
+      appendMqttLog('log-info', `DELIVERY -> Subscriber recebeu telemetria válida.`);
+      return;
+    }
+
+    if (eventType === 'confidentiality') {
+      if (atkSt) atkSt.textContent = 'SUBSCRIBE wildcard #';
+      if (isProtected) {
+        setCiaCardState('c', 'mitigated', 'Mitigado (ACL + TLS)', 'Subscrição # bloqueada por ACL e tráfego cifrado.');
+        appendMqttLog('log-warn', `CONNACK/SUBACK -> Atacante tentou SUBSCRIBE "${topic.split('/')[0]}/#" -> NEGADO (Not Authorized).`);
+        appendMqttLog('log-ok', `Sniffing TCP descartado: pacotes TLS :8883 ilegíveis.`);
+      } else {
+        setCiaCardState('c', 'compromised', 'COMPROMETIDO', 'Atacante capturou mensagens em texto plano via wildcard #.');
+        appendMqttLog('log-err', `[CONFIDENCIALIDADE] Atacante assinou "${topic.split('/')[0]}/#" e capturou: {"temp":24.6,"token":"adm123"}`);
+      }
+      return;
+    }
+
+    if (eventType === 'integrity') {
+      if (atkSt) atkSt.textContent = 'INJEÇÃO DE PAYLOAD';
+      if (isProtected) {
+        setCiaCardState('i', 'mitigated', 'Mitigado (HMAC)', 'Subscriber rejeitou payload sem HMAC válido.');
+        appendMqttLog('log-warn', `[INTEGRIDADE] Atacante tentou publicar {"temp":99.9} -> Rejeitado (Auth/HMAC inválido).`);
+      } else {
+        setCiaCardState('i', 'compromised', 'COMPROMETIDO', 'Subscriber aceitou leitura falsa (99.9°C) como legítima.');
+        appendMqttLog('log-err', `[INTEGRIDADE] Atacante publicou em ${topic}: {"temp":99.9,"alerta":"CRITICO"} -> Aceito pelo painel!`);
+      }
+      return;
+    }
+
+    if (eventType === 'hijack') {
+      if (atkSt) atkSt.textContent = `ROUBO DE ID (${clientId})`;
+      if (isProtected) {
+        setCiaCardState('a', 'mitigated', 'Mitigado (Auth + UUID)', 'Broker rejeitou conexão do atacante por credenciais inválidas.');
+        appendMqttLog('log-warn', `[DISPONIBILIDADE] Atacante tentou conectar com ClientID="${clientId}" -> CONNACK 0x05 (Não autorizado).`);
+      } else {
+        if (pubSt) { pubSt.textContent = 'DESCONECTADO!'; pubSt.setAttribute('fill', 'var(--error)'); }
+        setCiaCardState('a', 'compromised', 'COMPROMETIDO', `Sessão "${clientId}" desapropriada! Vítima desconectada.`);
+        appendMqttLog('log-err', `[DISPONIBILIDADE] Atacante enviou CONNECT com ClientID="${clientId}". Broker derrubou o sensor legítimo!`);
+      }
+      return;
+    }
+
+    if (eventType === 'flood') {
+      if (atkSt) atkSt.textContent = 'FLOODING (5.000 msg/s)';
+      if (isProtected) {
+        setCiaCardState('a', 'mitigated', 'Mitigado (Rate Limit)', 'Broker aplicou throttling/cota por cliente autenticado.');
+        appendMqttLog('log-warn', `[DISPONIBILIDADE] Rajada de pacotes bloqueada por Rate Limiting e cota máxima de QoS.`);
+      } else {
+        if (loadSt) { loadSt.textContent = 'CARGA: SATURADA!'; loadSt.setAttribute('fill', 'var(--error)'); }
+        setCiaCardState('a', 'compromised', 'COMPROMETIDO', 'Fila de entrega saturada; latência > 4.200 ms.');
+        appendMqttLog('log-err', `[DISPONIBILIDADE] FLOODING em ${topic}: 5.000 msgs/s de 2 KB. Subscriber congestionado!`);
+      }
+    }
+  }
+
+  // =========================================================================
+  // MÓDULO 5: CATÁLOGO DE EXERCÍCIOS E QUIZ
+  // =========================================================================
+  const exercisesData = [
+    {
+      id: `ex1`,
+      category: `simetrica`,
+      catLabel: `Simétrica`,
+      level: `Iniciante`,
+      title: `Quebra de Cifra de César e Análise de Espaço de Chaves`,
+      prompt: `Implemente em Python uma função que receba a string cifrada "VHJXUDQFD HP TWPP" (deslocamento desconhecido) e imprima automaticamente os 25 candidatos possíveis para identificar a mensagem original.`,
+      hint: `Aplique deslocamento negativo (-k) variando k de 1 até 25 usando aritmética modular (ord(c) - ord('A') - k) % 26.`,
+      solution: `cipher = "VHJXUDQFD HP TWPP"
+for k in range(1, 26):
+    dec = "".join(
+        chr((ord(c) - 65 - k) % 26 + 65) if 'A' <= c <= 'Z' else c
+        for c in cipher
+    )
+    print(f"k={k:02d}: {dec}")  # k=03 revela SEGURANCA EM MQTT (com T ajustado)`
+    },
+    {
+      id: `ex2`,
+      category: `simetrica`,
+      catLabel: `Simétrica`,
+      level: `Intermediário`,
+      title: `Comparação Prática: AES-ECB vs AES-CBC com Blocos Repetidos`,
+      prompt: `Crie um payload de 48 bytes formado por 3 repetições idênticas de b"INTELI_IOT_2026_" (16 bytes). Cifre com AES-256 em ECB e em CBC e verifique via código se os blocos cifrados de saída se repetem.`,
+      hint: `Compare fatiamentos ct[:16] == ct[16:32] para ECB e CBC. No CBC, gere um IV diferente com os.urandom(16).`,
+      solution: `import os
+from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
+
+chave = os.urandom(32)
+bloco = b"INTELI_IOT_2026_" * 3
+
+ct_ecb = Cipher(algorithms.AES(chave), modes.ECB()).encryptor()
+out_ecb = ct_ecb.update(bloco) + ct_ecb.finalize()
+
+iv = os.urandom(16)
+ct_cbc = Cipher(algorithms.AES(chave), modes.CBC(iv)).encryptor()
+out_cbc = ct_cbc.update(bloco) + ct_cbc.finalize()
+
+print("ECB vaza repeticao?", out_ecb[:16] == out_ecb[16:32])  # True
+print("CBC vaza repeticao?", out_cbc[:16] == out_cbc[16:32])  # False`
+    },
+    {
+      id: `ex3`,
+      category: `assimetrica`,
+      catLabel: `Assimétrica`,
+      level: `Intermediário`,
+      title: `Envelopes Digitais: Assinatura Digital RSA com Verificação de Falha`,
+      prompt: `Gere um par de chaves RSA 2048, assine o payload b'{"porta":"aberta"}' com a chave privada e demonstre que alterar um único byte antes de chamar public_key.verify() dispara InvalidSignature.`,
+      hint: `Use padding.PSS com hashes.SHA256() e envolva verify() em um bloco try/except InvalidSignature.`,
+      solution: `from cryptography.hazmat.primitives.asymmetric import rsa, padding
+from cryptography.hazmat.primitives import hashes
+from cryptography.exceptions import InvalidSignature
+
+priv = rsa.generate_private_key(65537, 2048)
+pub = priv.public_key()
+msg = b'{"porta":"aberta"}'
+
+sig = priv.sign(msg, padding.PSS(mgf=padding.MGF1(hashes.SHA256()), salt_length=padding.PSS.MAX_LENGTH), hashes.SHA256())
+
+try:
+    pub.verify(sig, b'{"porta":"fechada"}', padding.PSS(mgf=padding.MGF1(hashes.SHA256()), salt_length=padding.PSS.MAX_LENGTH), hashes.SHA256())
+except InvalidSignature:
+    print("Adulteracao detectada com sucesso!")`
+    },
+    {
+      id: `ex4`,
+      category: `hash`,
+      catLabel: `Hashes`,
+      level: `Iniciante`,
+      title: `Verificação de Efeito Avalanche com SHA-256 em Python`,
+      prompt: `Calcule o SHA-256 de b"Telemetria: 20.0" e b"Telemetria: 20.1" usando hashlib e conte exatamente quantos dos 256 bits diferem entre os dois resumos.`,
+      hint: `Converta os hexadecimais para inteiros com int(hex_str, 16), faça um XOR (h1 ^ h2) e use .bit_count() (Python 3.10+).`,
+      solution: `import hashlib
+
+h1 = int(hashlib.sha256(b"Telemetria: 20.0").hexdigest(), 16)
+h2 = int(hashlib.sha256(b"Telemetria: 20.1").hexdigest(), 16)
+
+bits_diferentes = (h1 ^ h2).bit_count()
+print(f"Bits alterados: {bits_diferentes}/256 ({bits_diferentes/256:.1%})")`
+    },
+    {
+      id: `ex5`,
+      category: `mqtt`,
+      catLabel: `MQTT / CIA`,
+      level: `Intermediário`,
+      title: `Teste Controlado de Desapropriação de Client ID`,
+      prompt: `Em dois terminais Python conectados a broker.hivemq.com:1883, inicie primeiro um Subscriber com client_id="t17_vitima_01" e callback on_disconnect. Em seguida, conecte outro script com o mesmo client_id e observe o código de desconexão.`,
+      hint: `No callback on_disconnect, imprima reason_code. Quando ocorre Session Takeover, o cliente original recebe desconexão imediata do broker.`,
+      solution: `import paho.mqtt.client as mqtt
+
+def on_disconnect(client, userdata, flags, reason_code, properties=None):
+    print("Desconectado pelo broker! Motivo:", reason_code)
+
+c = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2, client_id="t17_vitima_01")
+c.on_disconnect = on_disconnect
+c.connect("broker.hivemq.com", 1883, 60)
+c.loop_forever()`
+    },
+    {
+      id: `ex6`,
+      category: `mqtt`,
+      catLabel: `MQTT / CIA`,
+      level: `Avançado`,
+      title: `Mitigação de Integridade em MQTT com HMAC-SHA256 no Payload`,
+      prompt: `Escreva um par Publisher/Subscriber em paho-mqtt onde toda mensagem JSON enviada inclui um campo "hmac" calculado com chave secreta compartilhada, e o Subscriber descarta qualquer mensagem injetada sem HMAC válido.`,
+      hint: `Serialize o dado com json.dumps(..., sort_keys=True) para garantir ordem determinística antes de calcular hmac.new(...) e validar com hmac.compare_digest().`,
+      solution: `import json, hmac, hashlib
+
+CHAVE = b"chave_iot_t17"
+
+def assinar_payload(dados: dict) -> str:
+    corpo = json.dumps(dados, sort_keys=True).encode()
+    tag = hmac.new(CHAVE, corpo, hashlib.sha256).hexdigest()
+    return json.dumps({"dados": dados, "hmac": tag})
+
+def verificar_payload(raw: bytes) -> bool:
+    pkt = json.loads(raw.decode())
+    corpo = json.dumps(pkt["dados"], sort_keys=True).encode()
+    esperado = hmac.new(CHAVE, corpo, hashlib.sha256).hexdigest()
+    return hmac.compare_digest(esperado, pkt["hmac"])`
+    }
+  ];
+
+  let currentExerciseFilter = 'all';
+
+  function filterExercises(cat, btnEl) {
+    currentExerciseFilter = cat;
+    if (btnEl && btnEl.parentElement) {
+      btnEl.parentElement.querySelectorAll('.btn').forEach((b) => b.classList.remove('is-selected'));
+      btnEl.classList.add('is-selected');
+    }
+    renderExercises();
+  }
+
+  function toggleExerciseDone(exId) {
+    const idx = appState.completedExercises.indexOf(exId);
+    if (idx === -1) appState.completedExercises.push(exId);
+    else appState.completedExercises.splice(idx, 1);
+    updateKpis();
+    renderExercises();
+    saveAppState();
+  }
+
+  function renderExercises() {
+    const container = document.getElementById('exercise-catalog');
+    if (!container) return;
+
+    const list = currentExerciseFilter === 'all'
+      ? exercisesData
+      : exercisesData.filter((e) => e.category === currentExerciseFilter);
+
+    let html = ``;
+    list.forEach((ex) => {
+      const done = appState.completedExercises.includes(ex.id);
+      html += `
+        <article class="exercise-card ${done ? 'is-done' : ''}">
+          <div style="display: flex; justify-content: space-between; align-items: center; gap: var(--space-sm); flex-wrap: wrap;">
+            <span class="tag">${escapeHtml(ex.catLabel)}</span>
+            <span class="tag ${done ? 'tag--ok' : 'tag--neutral'}">${done ? 'Concluído' : escapeHtml(ex.level)}</span>
+          </div>
+          <h4 class="subhead" style="margin: 0;">${escapeHtml(ex.title)}</h4>
+          <p style="margin: 0; font-size: 0.9375rem;">${escapeHtml(ex.prompt)}</p>
+
+          <details class="details-toggle">
+            <summary>Dica técnica</summary>
+            <div class="details-body" style="font-size: 0.875rem; color: var(--on-surface-variant);">
+              ${escapeHtml(ex.hint)}
+            </div>
+          </details>
+
+          <details class="details-toggle">
+            <summary>Solução comentada em Python</summary>
+            <div class="details-body">
+              <pre class="code-pre" style="background: var(--surface-code); padding: var(--space-sm); font-size: 0.78rem;">${escapeHtml(ex.solution)}</pre>
+            </div>
+          </details>
+
+          <button type="button" class="btn ${done ? 'btn--secondary' : 'btn--primary'}" onclick="toggleExerciseDone('${ex.id}')">
+            <span>${done ? 'Desmarcar conclusão' : 'Marcar como concluído'}</span>
+            <i data-lucide="${done ? 'check-circle' : 'circle'}" aria-hidden="true"></i>
+          </button>
+        </article>
+      `;
+    });
+
+    container.innerHTML = html;
+    if (window.lucide) window.lucide.createIcons();
+  }
+
+  // QUIZ DATA
+  const quizQuestions = [
+    {
+      id: `q1`,
+      q: `Por que o modo AES-ECB é considerado inseguro para cifrar imagens ou mensagens com blocos repetidos?`,
+      opts: [
+        `Porque usa chaves de apenas 56 bits.`,
+        `Porque blocos idênticos de entrada produzem exatamente o mesmo bloco cifrado na saída, preservando padrões estruturais.`,
+        `Porque exige um Vetor de Inicialização (IV) que trafega em texto claro.`,
+        `Porque não permite decifrar a mensagem posteriormente.`
+      ],
+      ans: 1,
+      exp: `No modo ECB, cada bloco de 128 bits é cifrado de forma isolada e determinística com a mesma chave, vazando padrões repetitivos (como no famoso "ECB Penguin"). Modos como CBC e CTR evitam isso usando IV ou Nonce.`
+    },
+    {
+      id: `q2`,
+      q: `Qual característica diferencia o modo AES-CTR do modo AES-CBC?`,
+      opts: [
+        `O CTR transforma a cifra de bloco em cifra de fluxo usando Nonce + Contador, dispensando padding e permitindo paralelismo.`,
+        `O CTR é mais lento porque precisa encadear o bloco cifrado anterior via XOR.`,
+        `O CTR utiliza duas chaves assimétricas diferentes.`,
+        `O CTR produz o mesmo resultado do ECB quando a entrada é repetida.`
+      ],
+      ans: 0,
+      exp: `AES-CTR cifra valores incrementais (Nonce + Contador) e aplica XOR com o texto claro. Isso elimina a necessidade de padding PKCS7 e permite processar blocos em paralelo.`
+    },
+    {
+      id: `q3`,
+      q: `Na criptografia assimétrica (RSA), qual chave deve ser usada pelo remetente para gerar uma Assinatura Digital?`,
+      opts: [
+        `A chave pública do destinatário.`,
+        `A chave pública do próprio remetente.`,
+        `A chave privada do próprio remetente.`,
+        `Uma chave simétrica AES temporária.`
+      ],
+      ans: 2,
+      exp: `Para provar autoria e integridade (assinatura digital), o remetente assina o hash com sua Chave Privada. Qualquer destinatário valida a assinatura usando a Chave Pública do remetente.`
+    },
+    {
+      id: `q4`,
+      q: `Qual propriedade define o "Efeito Avalanche" em funções hash seguras como o SHA-256?`,
+      opts: [
+        `O tamanho do hash cresce proporcionalmente ao tamanho do arquivo.`,
+        `É possível reverter o hash para o texto original se conhecermos o algoritmo.`,
+        `Alterar um único bit na entrada modifica aproximadamente metade dos bits do hash de saída de forma imprevisível.`,
+        `Duas entradas diferentes sempre geram o mesmo resumo para economizar memória.`
+      ],
+      ans: 2,
+      exp: `O efeito avalanche garante que mudanças mínimas na entrada alterem cerca de 50% dos 256 bits de saída, impedindo correlações entre entradas similares.`
+    },
+    {
+      id: `q5`,
+      q: `Por que enviar apenas "payload + SHA256(payload)" em um tópico MQTT público NÃO garante proteção contra adulteração por um atacante?`,
+      opts: [
+        `Porque o SHA-256 só funciona em imagens.`,
+        `Porque qualquer atacante pode modificar o payload, recalcular o novo SHA-256 sem precisar de chave e enviar ambos ao broker.`,
+        `Porque o broker MQTT apaga o campo de hash automaticamente.`,
+        `Porque o SHA-256 produz colisões triviais em menos de 1 segundo.`
+      ],
+      ans: 1,
+      exp: `SHA-256 é uma função pública sem segredo. Para garantir integridade autenticada contra adulteração em trânsito, é necessário usar chave secreta (HMAC-SHA256) ou chave privada (Assinatura RSA/ECDSA).`
+    },
+    {
+      id: `q6`,
+      q: `No Autoestudo 6, o que acontece quando dois clientes MQTT se conectam ao mesmo broker utilizando exatamente o mesmo Client ID?`,
+      opts: [
+        `Os dois clientes recebem as mensagens em paralelo sem interferência.`,
+        `O broker bloqueia o segundo cliente e mantém apenas o primeiro conectado.`,
+        `O broker aceita o novo cliente e desconecta imediatamente o cliente original (Session Takeover), impactando a Disponibilidade.`,
+        `O broker converte automaticamente a conexão da porta 1883 para 8883.`
+      ],
+      ans: 2,
+      exp: `Pela especificação MQTT, o Client ID é único no broker. Conectar com um ID já ativo derruba a sessão anterior — base do ataque de Desapropriação de Client ID (Client ID Hijacking).`
+    },
+    {
+      id: `q7`,
+      q: `Um atacante que se inscreve no tópico "inteli/sem07/#" em um broker público TCP:1883 sem ACL está violando principalmente qual pilar da Tríade CIA?`,
+      opts: [
+        `Disponibilidade`,
+        `Confidencialidade`,
+        `Integridade`,
+        `Não-repúdio`
+      ],
+      ans: 1,
+      exp: `Ao assinar wildcards (# ou +) e ler dados trafegados em texto plano na porta 1883, o atacante realiza espionagem (eavesdropping), comprometendo a Confidencialidade.`
+    },
+    {
+      id: `q8`,
+      q: `Qual conjunto de medidas mitiga simultaneamente os ataques de Confidencialidade, Integridade e Disponibilidade (Client ID Hijack) em MQTT?`,
+      opts: [
+        `Usar MD5 no payload e manter a porta 1883 aberta.`,
+        `Usar Cifra de César no tópico e Client ID fixo igual a "cliente1".`,
+        `Usar MQTTS (TLS na porta 8883), autenticação por usuário/ACL, Client IDs com UUID aleatório e HMAC/assinatura no payload.`,
+        `Aumentar o KeepAlive para 600 segundos sem autenticação.`
+      ],
+      ans: 2,
+      exp: `TLS (MQTTS :8883) protege o canal contra sniffing; ACL restringe quem lê/publica em cada tópico; autenticação impede roubo de Client ID; e HMAC/assinatura asseguram integridade do payload.`
+    }
+  ];
+
+  function selectQuizOption(qId, optIdx) {
+    appState.quizAnswers[qId] = optIdx;
+    updateKpis();
+    renderQuiz();
+    saveAppState();
+  }
+
+  function resetQuiz(btn) {
+    if (btn && btn.dataset.armed !== 'true') {
+      btn.dataset.armed = 'true';
+      btn.textContent = 'Confirmar reinício';
+      setTimeout(() => {
+        if (btn.dataset.armed === 'true') {
+          btn.dataset.armed = 'false';
+          btn.textContent = 'Reiniciar quiz';
+        }
+      }, 3000);
+      return;
+    }
+    if (btn) {
+      btn.dataset.armed = 'false';
+      btn.textContent = 'Reiniciar quiz';
+    }
+    appState.quizAnswers = {};
+    updateKpis();
+    renderQuiz();
+    saveAppState();
+  }
+
+  function renderQuiz() {
+    const container = document.getElementById('quiz-container');
+    const progTag = document.getElementById('quiz-progress-tag');
+    if (!container) return;
+
+    const letters = ['A', 'B', 'C', 'D'];
+    let answeredCount = 0;
+    let html = ``;
+
+    quizQuestions.forEach((item, qIdx) => {
+      const chosen = appState.quizAnswers[item.id];
+      const hasAnswered = typeof chosen === 'number';
+      if (hasAnswered) answeredCount++;
+
+      let optsHtml = ``;
+      item.opts.forEach((optText, oIdx) => {
+        let cls = 'quiz-opt';
+        if (hasAnswered) {
+          if (oIdx === item.ans) cls += ' is-correct';
+          else if (oIdx === chosen) cls += ' is-wrong';
+        }
+        optsHtml += `
+          <button type="button" class="${cls}" onclick="selectQuizOption('${item.id}', ${oIdx})">
+            <span class="opt-letter">${letters[oIdx]}</span>
+            <span>${escapeHtml(optText)}</span>
+          </button>
+        `;
+      });
+
+      let feedbackHtml = ``;
+      if (hasAnswered) {
+        const isRight = chosen === item.ans;
+        feedbackHtml = `
+          <div class="notice ${isRight ? 'notice--ok' : 'notice--err'}" style="background: var(--background);">
+            <span class="notice-title">${isRight ? 'Resposta correta' : 'Resposta incorreta'}</span>
+            <span style="font-size: 0.875rem;">${escapeHtml(item.exp)}</span>
+          </div>
+        `;
+      }
+
+      html += `
+        <div class="quiz-card">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span class="label">Questão 0${qIdx + 1}</span>
+            ${hasAnswered ? `<span class="tag ${chosen === item.ans ? 'tag--ok' : 'tag--err'}">${chosen === item.ans ? 'Acertou' : 'Revisar'}</span>` : ''}
+          </div>
+          <strong style="font-size: 1rem;">${escapeHtml(item.q)}</strong>
+          <div class="quiz-options">${optsHtml}</div>
+          ${feedbackHtml}
+        </div>
+      `;
+    });
+
+    container.innerHTML = html;
+    if (progTag) progTag.textContent = `${answeredCount} de ${quizQuestions.length} respondidas`;
+  }
+
+  function updateKpis() {
+    const exEl = document.getElementById('kpi-ex-done');
+    const qEl = document.getElementById('kpi-quiz-score');
+    if (exEl) exEl.textContent = `${appState.completedExercises.length} / ${exercisesData.length}`;
+    let score = 0;
+    quizQuestions.forEach((q) => {
+      if (appState.quizAnswers[q.id] === q.ans) score++;
+    });
+    if (qEl) qEl.textContent = `${score} / ${quizQuestions.length}`;
+  }
+
+  // =========================================================================
+  // MÓDULO 6: CHECKLIST & EXPORTAÇÃO DE RELATÓRIO
+  // =========================================================================
+  function toggleChecklist(checkbox) {
+    if (!checkbox) return;
+    const key = checkbox.getAttribute('data-check');
+    if (!key) return;
+    appState.checklist[key] = checkbox.checked;
+    saveAppState();
+  }
+
+  function saveReportFields() {
+    const st = document.getElementById('rep-student');
+    const br = document.getElementById('rep-broker');
+    const tp = document.getElementById('rep-topic');
+    const nt = document.getElementById('rep-notes');
+    appState.report.student = st ? st.value : ``;
+    appState.report.broker = br ? br.value : ``;
+    appState.report.topic = tp ? tp.value : ``;
+    appState.report.notes = nt ? nt.value : ``;
+    saveAppState();
+  }
+
+  function restoreChecklistAndReport() {
+    document.querySelectorAll('input[data-check]').forEach((cb) => {
+      const k = cb.getAttribute('data-check');
+      if (k && typeof appState.checklist[k] === 'boolean') cb.checked = appState.checklist[k];
+    });
+    const st = document.getElementById('rep-student');
+    const br = document.getElementById('rep-broker');
+    const tp = document.getElementById('rep-topic');
+    const nt = document.getElementById('rep-notes');
+    if (st && appState.report.student) st.value = appState.report.student;
+    if (br && appState.report.broker) br.value = appState.report.broker;
+    if (tp && appState.report.topic) tp.value = appState.report.topic;
+    if (nt && appState.report.notes) nt.value = appState.report.notes;
+  }
+
+  function exportTechnicalReport() {
+    saveReportFields();
+    const r = appState.report;
+    const content = [
+      `RELATÓRIO TÉCNICO — AUTOESTUDO 6 (SIMULAÇÃO DE ATAQUES EM MQTT)`,
+      `==================================================================`,
+      `Aluno: ${r.student || '[Preencher nome]'}`,
+      `Broker Utilizado: ${r.broker}`,
+      `Tópico Exclusivo: ${r.topic}`,
+      ``,
+      `1. CONFIGURAÇÃO DO AMBIENTE INDIVIDUAL`,
+      `- Cliente Assinante (Subscriber): [Descrever Client ID aleatório e cliente usado]`,
+      `- Cliente Publicador (Publisher): [Descrever frequência e estrutura JSON]`,
+      ``,
+      `2. ATAQUE À CONFIDENCIALIDADE (2,5 pts)`,
+      `- Passo-a-passo: Conexão de agente atacante subscrito no wildcard "${r.topic.split('/')[0]}/#" na porta TCP 1883.`,
+      `- Resultado observado: Captura integral dos payloads em texto claro.`,
+      `- Mitigação recomendada: MQTTS (TLS na porta 8883) + ACL por tópico + criptografia AES-GCM/CBC no payload.`,
+      ``,
+      `3. ATAQUE À INTEGRIDADE (2,5 pts)`,
+      `- Passo-a-passo: Publicação de payload adulterado diretamente no tópico da vítima.`,
+      `- Resultado observado: O Subscriber aceitou o valor falso sem mecanismo de verificação.`,
+      `- Mitigação recomendada: Autenticação no Broker + HMAC-SHA256 ou Assinatura Digital RSA no payload.`,
+      ``,
+      `4. ATAQUE À DISPONIBILIDADE (2,5 pts)`,
+      `- Passo-a-passo A (Client ID Hijacking): Conexão do atacante usando o mesmo Client ID do dispositivo legítimo, causando desconexão imediata (Session Takeover).`,
+      `- Passo-a-passo B (Flooding): Envio em rajada de mensagens causando saturação de entrega.`,
+      `- Mitigação recomendada: Credenciais exclusivas por Client ID, UUIDs não previsíveis e Rate Limiting no Broker.`,
+      ``,
+      `5. EVIDÊNCIAS E OBSERVAÇÕES REGISTRADAS`,
+      `${r.notes || '[Inserir aqui capturas de log, timestamps e prints de tela]'}`,
+      ``
+    ].join('\n');
+
+    const fb = document.getElementById('export-feedback');
+    if (window.notebookAppApi && typeof window.notebookAppApi.triggerFileDownload === 'function') {
+      window.notebookAppApi.triggerFileDownload({
+        content: content,
+        contentType: 'text/plain',
+        encoding: 'UTF-8',
+        filename: 'relatorio_autoestudo6_mqtt.txt'
+      });
+      if (fb) fb.textContent = 'Download do rascunho iniciado!';
+    } else {
+      const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'relatorio_autoestudo6_mqtt.txt';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      if (fb) fb.textContent = 'Arquivo gerado para download!';
+    }
+    setTimeout(() => { if (fb) fb.textContent = ``; }, 3000);
+  }
+
+  // =========================================================================
+  // INICIALIZAÇÃO
+  // =========================================================================
+  async function initApp() {
+    await loadAppState();
+    updateCaesar();
+    renderAesVisuals();
+    initRsaLab();
+    updateHashLab();
+    selectMqttCodeTab('legit', document.querySelector('.tab-bar .tab-btn'));
+    resetMqttSimulator();
+    renderExercises();
+    renderQuiz();
+    restoreChecklistAndReport();
+    updateKpis();
+
+    if (window.lucide && typeof window.lucide.createIcons === 'function') {
+      window.lucide.createIcons();
+    }
+
+    if (window.notebookAppApi && typeof window.notebookAppApi.notifyAppReady === 'function') {
+      window.notebookAppApi.notifyAppReady();
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', initApp);
+</script>
+</body>
+</html>
